@@ -4,7 +4,8 @@
         x:Class="Moon_WiiVC_Injector.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="{Binding WindowTitle}"
-        Width="680"
+        Width="800"
+        MinWidth="800"
         Height="620"
         WindowStartupLocation="CenterScreen"
         DragDrop.AllowDrop="True">
@@ -151,7 +152,6 @@
           <CheckBox Name="WiiVMC" Content="Patch video mode with Wii-VMC (Wii Retail only, opens new window)" IsChecked="{Binding WiiVMC}"/>
           <CheckBox Name="DisableGamePad" Content="Don't use GamePad as controller (Won't prompt for usage)" IsChecked="{Binding DisableGamePad}"/>
           <CheckBox Name="DisableTrimming" Content="Don't trim game output (Wii Retail only)" IsChecked="{Binding DisableTrimming}"/>
-          <CheckBox Name="DisableNintendontAutoboot" Content="Disable Autoboot" IsChecked="{Binding DisableNintendontAutoboot}"/>
           <CheckBox Name="C2WPatchFlag" Content="Enable cafe2wii patching (NOT RECOMMENDED)" IsChecked="{Binding C2WPatchFlag}"/>
 
           <Border Name="AncastKeyBorder" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Padding="10" Margin="0,10,0,0" IsVisible="{Binding IsAncastKeyVisible}">
@@ -167,7 +167,14 @@
         </StackPanel>
       </TabItem>
 
-      <!-- Tab 5: Build Title -->
+      <!-- Tab 5: Nintendont (GameCube only) -->
+      <TabItem Header="Nintendont" IsEnabled="{Binding IsGCSelected}">
+        <StackPanel Margin="10" Spacing="10">
+          <CheckBox Name="DisableNintendontAutoboot" Content="Disable Autoboot" IsChecked="{Binding DisableNintendontAutoboot}"/>
+        </StackPanel>
+      </TabItem>
+
+      <!-- Tab 6: Build Title -->
       <TabItem Header="Build Title">
         <Grid ColumnDefinitions="*,*" Margin="10">
           <StackPanel Grid.Column="0" Spacing="8">
@@ -208,7 +215,7 @@
         </Grid>
       </TabItem>
 
-      <!-- Tab 6: Build Logs -->
+      <!-- Tab 7: Build Logs -->
       <TabItem Header="Build Logs">
         <Grid RowDefinitions="*,Auto" Margin="10">
           <TextBox Grid.Row="0" Name="LogOutputBox" Text="{Binding LogOutput}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas, monospace" FontSize="11"/>
