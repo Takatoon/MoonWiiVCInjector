@@ -10,6 +10,29 @@
         WindowStartupLocation="CenterScreen"
         DragDrop.AllowDrop="True">
 
+  <Window.Styles>
+    <Style Selector="NumericUpDown.nintendont-number">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackground}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxForeground}"/>
+    </Style>
+    <Style Selector="NumericUpDown.nintendont-number:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundPointerOver}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrushPointerOver}"/>
+    </Style>
+    <Style Selector="NumericUpDown.nintendont-number:focus-within">
+      <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushFocused}"/>
+    </Style>
+    <Style Selector="NumericUpDown.nintendont-number:disabled">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundDisabled}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrushDisabled}"/>
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxForegroundDisabled}"/>
+    </Style>
+    <Style Selector="NumericUpDown.nintendont-number /template/ TextBox#PART_TextBox /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="Transparent"/>
+    </Style>
+  </Window.Styles>
+
   <Grid RowDefinitions="Auto,*,Auto" Margin="10">
     <!-- Top Area: Radio Buttons & SD Card Button -->
     <Grid Grid.Row="0" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
@@ -25,7 +48,7 @@
     </Grid>
 
     <!-- Tab Control -->
-    <TabControl Grid.Row="1" Name="MainTabs" IsEnabled="{Binding !IsBuilding}" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Padding="0">
+    <TabControl Grid.Row="1" Name="MainTabs" IsEnabled="{Binding !IsBuilding}" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Padding="0" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
       
       <!-- Tab 1: Required Source Files -->
       <TabItem Header="Required Source Files">
@@ -169,9 +192,128 @@
 
       <!-- Tab 5: Nintendont (GameCube only) -->
       <TabItem Header="Nintendont" IsEnabled="{Binding IsGCSelected}">
-        <StackPanel Margin="10" Spacing="10">
-          <CheckBox Name="DisableNintendontAutoboot" Content="Disable Autoboot" IsChecked="{Binding DisableNintendontAutoboot}"/>
-        </StackPanel>
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" AllowAutoHide="False">
+          <StackPanel Margin="10" Spacing="12">
+            <StackPanel Spacing="8">
+              <CheckBox Name="DisableNintendontAutoboot" Content="Disable Autoboot" IsChecked="{Binding DisableNintendontAutoboot}" ToolTip.Tip="Embedded config requires autoboot."/>
+              <CheckBox Name="EmbedNintendontConfig" Content="Embed custom config" IsChecked="{Binding EmbedNintendontConfig}" IsEnabled="{Binding !DisableNintendontAutoboot}" ToolTip.Tip="An SD game-specific config (XXXX.bin) takes precedence."/>
+            </StackPanel>
+            <Grid IsEnabled="{Binding !DisableNintendontAutoboot}">
+              <Grid IsEnabled="{Binding EmbedNintendontConfig}">
+                <Grid DataContext="{Binding NintendontConfig}" x:DataType="vm:NintendontConfigViewModel" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
+                  <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,*" Margin="0,0,6,12">
+                    <Border Grid.Row="0" Margin="0,0,0,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+                      <StackPanel Spacing="8">
+                        <TextBlock Text="Memory Card" FontWeight="SemiBold"/>
+                        <CheckBox Content="Memcard Emulation" IsChecked="{Binding MemcardEmulation}" ToolTip.Tip="Save game progress to virtual GameCube memory card files. Required for saving on Wii U, which has no physical GameCube memory card slots."/>
+                        <StackPanel Spacing="8" IsEnabled="{Binding MemcardEmulation}">
+                          <Grid Background="Transparent" ToolTip.Tip="Capacity of the virtual memory card in save blocks. Larger than 251 may cause compatibility issues. Does not resize existing cards." ColumnDefinitions="*,170">
+                            <TextBlock Text="Memcard Blocks" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="1" SelectedIndex="{Binding MemcardBlocksIndex}" HorizontalAlignment="Stretch">
+                              <ComboBoxItem Content="59"/>
+                              <ComboBoxItem Content="123"/>
+                              <ComboBoxItem Content="251"/>
+                              <ComboBoxItem Content="507 (Unstable)"/>
+                              <ComboBoxItem Content="1019 (Unstable)"/>
+                              <ComboBoxItem Content="2043 (Unstable)"/>
+                            </ComboBox>
+                          </Grid>
+                          <CheckBox Content="Multi Memcard" IsChecked="{Binding MultiMemcard}" ToolTip.Tip="Share a card between games, separated by Japan and USA/PAL. Off uses one card per game."/>
+                        </StackPanel>
+                      </StackPanel>
+                    </Border>
+                    <Border Grid.Row="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+                      <StackPanel Spacing="8">
+                        <TextBlock Text="Controllers &amp; Language" FontWeight="SemiBold"/>
+                        <Grid Background="Transparent" ToolTip.Tip="Assign the Wii U GamePad to player 1–4. Select None to disable it as a GameCube controller." ColumnDefinitions="*,170">
+                          <TextBlock Text="GamePad Slot" VerticalAlignment="Center"/>
+                          <ComboBox Grid.Column="1" SelectedIndex="{Binding GamepadSlotIndex}" HorizontalAlignment="Stretch">
+                            <ComboBoxItem Content="Player 1"/>
+                            <ComboBoxItem Content="Player 2"/>
+                            <ComboBoxItem Content="Player 3"/>
+                            <ComboBoxItem Content="Player 4"/>
+                            <ComboBoxItem Content="None"/>
+                          </ComboBox>
+                        </Grid>
+                        <CheckBox Content="Wiimote CC Rumble" IsChecked="{Binding CcRumble}" ToolTip.Tip="Enable rumble on the Wii Remote when using a connected Classic Controller. The Classic Controller itself does not vibrate."/>
+                        <Grid Background="Transparent" ToolTip.Tip="Select the language reported to the game. The game must support the selected language; this does not translate it." ColumnDefinitions="*,170">
+                          <TextBlock Text="Language" VerticalAlignment="Center"/>
+                          <ComboBox Grid.Column="1" SelectedIndex="{Binding LanguageIndex}" HorizontalAlignment="Stretch">
+                            <ComboBoxItem Content="Automatic"/>
+                            <ComboBoxItem Content="English"/>
+                            <ComboBoxItem Content="German"/>
+                            <ComboBoxItem Content="French"/>
+                            <ComboBoxItem Content="Spanish"/>
+                            <ComboBoxItem Content="Italian"/>
+                            <ComboBoxItem Content="Dutch"/>
+                          </ComboBox>
+                        </Grid>
+                      </StackPanel>
+                    </Border>
+                  </Grid>
+                  <Border Grid.Row="0" Grid.Column="1" Margin="6,0,0,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+                    <StackPanel Spacing="8">
+                      <TextBlock Text="Video" FontWeight="SemiBold"/>
+                      <Grid Background="Transparent" ToolTip.Tip="Choose automatic video selection, force the selected Video Type, force it with a deflicker filter, or leave video mode unforced." ColumnDefinitions="*,170">
+                        <TextBlock Text="Video Mode" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Column="1" SelectedIndex="{Binding VideoModeIndex}" HorizontalAlignment="Stretch">
+                          <ComboBoxItem Content="Auto"/>
+                          <ComboBoxItem Content="Force"/>
+                          <ComboBoxItem Content="Force (Deflicker)"/>
+                          <ComboBoxItem Content="None"/>
+                        </ComboBox>
+                      </Grid>
+                      <Grid Background="Transparent" ToolTip.Tip="Output video format to request in Force or Force (Deflicker) mode." ColumnDefinitions="*,170" IsEnabled="{Binding CanSelectVideoType}">
+                        <TextBlock Text="Video Type" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Column="1" SelectedIndex="{Binding VideoTypeIndex}" HorizontalAlignment="Stretch">
+                          <ComboBoxItem Content="NTSC"/>
+                          <ComboBoxItem Content="MPAL"/>
+                          <ComboBoxItem Content="PAL50"/>
+                          <ComboBoxItem Content="PAL60"/>
+                        </ComboBox>
+                      </Grid>
+                      <CheckBox Content="Auto Video Width" IsChecked="{Binding AutoVideoWidth}" ToolTip.Tip="Let Nintendont choose the output image width. Disable to set Video Width manually."/>
+                      <Grid Background="Transparent" ToolTip.Tip="Adjust the horizontal output image width. Does not change height or internal rendering resolution." ColumnDefinitions="*,170" IsEnabled="{Binding !AutoVideoWidth}">
+                        <TextBlock Text="Video Width" VerticalAlignment="Center"/>
+                        <NumericUpDown Classes="nintendont-number" Grid.Column="1" Value="{Binding VideoWidth}" Minimum="640" Maximum="720" Increment="2" FormatString="0"/>
+                      </Grid>
+                      <Grid Background="Transparent" ToolTip.Tip="Shift the output image horizontally. Does not change its size." ColumnDefinitions="*,170">
+                        <TextBlock Text="Video Offset" VerticalAlignment="Center"/>
+                        <NumericUpDown Classes="nintendont-number" Grid.Column="1" Value="{Binding VideoOffset}" Minimum="-20" Maximum="20" Increment="1" FormatString="0"/>
+                      </Grid>
+                      <CheckBox Content="Wii U Widescreen" IsChecked="{Binding WiiUWidescreen}" ToolTip.Tip="Set Wii U output to 16:9 instead of 4:3. Games still rendering in 4:3 will appear stretched."/>
+                      <CheckBox Content="Force Widescreen" IsChecked="{Binding ForceWidescreen}" ToolTip.Tip="Patches game rendering; may cause visual issues or crashes."/>
+                      <CheckBox Content="Force Progressive" IsChecked="{Binding ForceProgressive}" ToolTip.Tip="May cause a black screen in incompatible games."/>
+                      <CheckBox Content="Patch PAL50" IsChecked="{Binding PatchPal50}" IsEnabled="{Binding CanPatchPal50}" ToolTip.Tip="Allow PAL50 video modes to be patched to the selected Video Type, or to progressive output when Force Progressive is enabled. May cause compatibility issues."/>
+                    </StackPanel>
+                  </Border>
+                  <Border Grid.Row="1" Grid.Column="0" Margin="0,0,6,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+                    <StackPanel Spacing="8">
+                      <TextBlock Text="Compatibility" FontWeight="SemiBold"/>
+                      <CheckBox Content="Unlock Read Speed" IsChecked="{Binding UnlockReadSpeed}" ToolTip.Tip="May affect game compatibility."/>
+                      <CheckBox Content="Skip IPL" IsChecked="{Binding SkipIpl}" ToolTip.Tip="Boot directly into the game instead of loading an available GameCube IPL or Triforce boot ROM. May affect boot compatibility."/>
+                      <CheckBox Content="TRI Arcade Mode" IsChecked="{Binding TriArcadeMode}" ToolTip.Tip="Enable arcade behavior for supported Triforce games. Has no effect on regular GameCube games."/>
+                    </StackPanel>
+                  </Border>
+                  <Border Grid.Row="1" Grid.Column="1" Margin="6,0,0,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+                    <StackPanel Spacing="8">
+                      <TextBlock Text="Cheats &amp; Network" FontWeight="SemiBold"/>
+                      <CheckBox Content="Enable Cheats" IsChecked="{Binding Cheats}" ToolTip.Tip="Use automatic cheat-file lookup; no custom cheat path."/>
+                      <CheckBox Content="BBA Emulation" IsChecked="{Binding BbaEmulation}" ToolTip.Tip="Emulate the GameCube Broadband Adapter for network features in supported games. Uses the Wii U's network connection."/>
+                    </StackPanel>
+                  </Border>
+                  <Border Grid.Row="2" Grid.ColumnSpan="2" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" RowSpacing="8">
+                      <TextBlock Grid.ColumnSpan="2" Text="Diagnostics" FontWeight="SemiBold"/>
+                      <CheckBox Grid.Row="1" Grid.Column="0" Content="OSReport" IsChecked="{Binding OsReport}" ToolTip.Tip="Enable diagnostic messages emitted by the game. Intended for troubleshooting."/>
+                      <CheckBox Grid.Row="1" Grid.Column="1" Content="Log" IsChecked="{Binding Log}" ToolTip.Tip="Write Nintendont diagnostic messages to ndebug.log on the storage device. Intended for troubleshooting."/>
+                    </Grid>
+                  </Border>
+                </Grid>
+              </Grid>
+            </Grid>
+          </StackPanel>
+        </ScrollViewer>
       </TabItem>
 
       <!-- Tab 6: Build Title -->

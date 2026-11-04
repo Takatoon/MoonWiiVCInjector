@@ -298,6 +298,14 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
         set => SetProperty(ref field, value);
     }
 
+    public bool EmbedNintendontConfig
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public NintendontConfigViewModel NintendontConfig { get; } = new();
+
     public bool C2WPatchFlag
     {
         get;
