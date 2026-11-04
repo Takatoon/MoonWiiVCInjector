@@ -4,6 +4,9 @@
         x:Class="Moon_WiiVC_Injector.SdCardMenuAvalonia"
         x:DataType="vm:SdCardViewModel"
         Title="Nintendont SD Card Menu..."
+        RequestedThemeVariant="Light"
+        Background="#f0f0f0"
+        Foreground="Black"
         Width="340" Height="580">
   <ScrollViewer>
     <StackPanel Margin="8" Spacing="8">
