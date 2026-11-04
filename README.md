@@ -6,20 +6,20 @@ This fork aims to add per-game Nintendont configuration support to Moon WiiVC In
 
 The integration builds on **[V10lator's Nintendont autoboot forwarder](https://github.com/V10lator/nintendont-autoboot-forwarder)**, based on the original work by **[FIX94](https://github.com/FIX94/nintendont-autoboot-forwarder)**. Credit for the forwarder and its configuration loading behavior belongs to its authors.
 
-**Status:** planning. The phases below are not yet implemented.
+**Status:** Phase 1 forwarder integration is implemented and passes the PC checks documented below. Full injection builds and real Wii U validation remain pending. Phases 2 and 3 are planned.
 
 ### Phase 1 — Integrate V10lator's forwarder
 
-Replace the default GameCube autobooter with V10lator's forwarder, without modifying its source code.
+The default GameCube autobooter is replaced with V10lator's forwarder, without modifying its source code.
 
-The existing **Disable Autoboot** checkbox will select the DOL included in new GameCube injections:
+The existing **Disable Autoboot** checkbox selects the DOL included in new GameCube injections:
 
 | Disable Autoboot | Included DOL |
 |---|---|
 | Unchecked | V10lator's autoboot forwarder |
 | Checked | Existing non-autoboot Nintendont forwarder |
 
-The previous default autobooter will remain in the repository resources for reference and recovery.
+The previous default autobooter remains in the repository resources for reference and recovery.
 
 V10lator's forwarder searches for a configuration in this order:
 
@@ -29,7 +29,11 @@ V10lator's forwarder searches for a configuration in this order:
 
 `XXXX` comes from the first four characters of the GameCube disc ID, not the Wii U Title ID. Configurations are selected by priority; their fields are not merged.
 
-Phase 1 will use externally prepared configuration files. It will not add an editor or embed configurations. Nintendont must still be installed at `SD:/apps/nintendont/boot.dol`.
+Phase 1 uses externally prepared configuration files. It does not add an editor or embed configurations. Nintendont must still be installed at `SD:/apps/nintendont/boot.dol`.
+
+Use a correctly generated **CFG v10 (548-byte)** file for the pinned forwarder. Older 544-byte files may fail before Nintendont can migrate them. Keep a backup and regenerate or explicitly convert them with a compatible tool; do not simply pad them or change the version number. Without a readable configuration, the forwarder can fail to start. The existing Moon global CFG writer has known incomplete/incorrect option mappings and is scheduled for correction in Phase 2.
+
+See [forwarder provenance, source, license and rebuild instructions](integrations/nintendont/README.md) for the exact revisions, checksum and validation limits.
 
 ### Phase 2 — Embed a configuration in each injection
 
@@ -48,7 +52,7 @@ This phase will reuse the editor and serializer from Phase 2, with explicit hand
 
 ### Compatibility and validation
 
-The integration will pin the forwarder revision and document its build, configuration format and binary checksum. The initial reference is CFG v10; older files must not be assumed compatible.
+The integration pins the forwarder revision and documents its build, configuration format and binary checksum. The initial reference is CFG v10; older files must not be assumed compatible.
 
 Each phase will distinguish automated checks from tests performed on real Wii U hardware. Existing installed injections will require rebuilding to use the new forwarder.
 

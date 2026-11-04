@@ -62,6 +62,11 @@
     <EmbeddedResource Include="Resources\wiitdb.txt" />
     <EmbeddedResource Include="Resources\Base\**\*" />
     <EmbeddedResource Include="Resources\Dol\**\*" />
+    <None Include="..\integrations\nintendont\**\*"
+          Exclude="..\integrations\nintendont\tests\**\*"
+          Link="integrations\nintendont\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RemoveNativePdbFilesFromPublish" AfterTargets="ComputeFilesToPublish" Condition="'$(Configuration)' == 'Release'">
     <ItemGroup>

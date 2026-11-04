@@ -38,7 +38,7 @@ internal static class BaseIsoTemplate
     {
         string resourceName = disableAutoboot
             ? $"{ResourcePrefix}.Dol.nintendont_forwarder.dol"
-            : $"{ResourcePrefix}.Dol.nintendont_default_autobooter.dol";
+            : $"{ResourcePrefix}.Dol.nintendont_v10lator.dol";
 
         string? dir = Path.GetDirectoryName(destinationFilePath);
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))

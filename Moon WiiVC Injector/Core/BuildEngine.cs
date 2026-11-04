@@ -470,7 +470,7 @@ internal sealed class BuildEngine(BuildOptions options, IProgress<(string Messag
                 if (Directory.Exists(tempIsoBase)) Directory.Delete(tempIsoBase, true);
                 Core.BaseIsoTemplate.CreateBaseDirectory(tempIsoBase);
 
-                // Default forwarder or Nintendont boot dol selection
+                // V10lator autobooter, or the existing non-autoboot forwarder.
                 Core.BaseIsoTemplate.CopyNintendontDol(Path.Combine(tempIsoBase, "sys", "main.dol"), _options.DisableNintendontAutoboot);
 
                 UpdateStatus("Copying GameCube disc image...", 25);
