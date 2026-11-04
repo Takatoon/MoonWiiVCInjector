@@ -419,35 +419,11 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
         set => SetProperty(ref field, value);
     } = string.Empty;
 
-    public string CommonKeyStatusColor
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = "#7f8c8d";
-
-    public string CommonKeyBorderBrush
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = "#a0a0a0";
-
     public string TitleKeyStatusText
     {
         get;
         set => SetProperty(ref field, value);
     } = string.Empty;
-
-    public string TitleKeyStatusColor
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = "#7f8c8d";
-
-    public string TitleKeyBorderBrush
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = "#a0a0a0";
 
     public string AncastKeyStatusText
     {
@@ -455,17 +431,9 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
         set => SetProperty(ref field, value);
     } = string.Empty;
 
-    public string AncastKeyStatusColor
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = "#7f8c8d";
-
-    public string AncastKeyBorderBrush
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = "#a0a0a0";
+    public bool IsCommonKeyInvalid => !string.IsNullOrWhiteSpace(WiiUCommonKey) && !IsCommonKeyValid;
+    public bool IsTitleKeyInvalid => !string.IsNullOrWhiteSpace(TitleKey) && !IsTitleKeyValid;
+    public bool IsAncastKeyInvalid => !string.IsNullOrWhiteSpace(AncastKey) && !IsAncastKeyValid;
 
     public bool CanSaveCommonKey => !IsCommonKeyReadOnly && IsCommonKeyValid;
     public bool CanSaveTitleKey => !IsTitleKeyReadOnly && IsTitleKeyValid;
@@ -696,20 +664,14 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
         if (string.IsNullOrWhiteSpace(WiiUCommonKey))
         {
             CommonKeyStatusText = string.Empty;
-            CommonKeyStatusColor = "#7f8c8d";
-            CommonKeyBorderBrush = "#a0a0a0";
         }
         else if (IsCommonKeyValid)
         {
             CommonKeyStatusText = "✓ Valid Wii U Common Key";
-            CommonKeyStatusColor = "#27ae60";
-            CommonKeyBorderBrush = "#27ae60";
         }
         else
         {
             CommonKeyStatusText = "✗ Invalid Common Key";
-            CommonKeyStatusColor = "#c0392b";
-            CommonKeyBorderBrush = "#c0392b";
         }
 
         // 2. Base & Title Key
@@ -717,8 +679,6 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
         {
             IsTitleKeyValid = false;
             TitleKeyStatusText = string.Empty;
-            TitleKeyStatusColor = "#7f8c8d";
-            TitleKeyBorderBrush = "#a0a0a0";
         }
         else
         {
@@ -732,15 +692,11 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
                 SelectedBase = matchedBase;
                 IsTitleKeyValid = true;
                 TitleKeyStatusText = $"✓ Title: {matchedBase.GameName} ({matchedBase.RegionCode}) | Version: {matchedBase.Version} | Title ID: {matchedBase.TitleId}";
-                TitleKeyStatusColor = "#27ae60";
-                TitleKeyBorderBrush = "#27ae60";
             }
             else
             {
                 IsTitleKeyValid = false;
                 TitleKeyStatusText = "✗ Invalid Title Key (Must match USA or EUR Rhythm Heaven base)";
-                TitleKeyStatusColor = "#c0392b";
-                TitleKeyBorderBrush = "#c0392b";
             }
         }
 
@@ -749,26 +705,23 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
         if (string.IsNullOrWhiteSpace(AncastKey))
         {
             AncastKeyStatusText = string.Empty;
-            AncastKeyStatusColor = "#7f8c8d";
-            AncastKeyBorderBrush = "#a0a0a0";
         }
         else if (IsAncastKeyValid)
         {
             AncastKeyStatusText = "✓ Valid Wii U Ancast Key";
-            AncastKeyStatusColor = "#27ae60";
-            AncastKeyBorderBrush = "#27ae60";
         }
         else
         {
             AncastKeyStatusText = "✗ Invalid Ancast Key";
-            AncastKeyStatusColor = "#c0392b";
-            AncastKeyBorderBrush = "#c0392b";
         }
 
         OnPropertyChanged(nameof(CanSaveCommonKey));
         OnPropertyChanged(nameof(CanSaveTitleKey));
         OnPropertyChanged(nameof(CanSaveAncastKey));
 
+        OnPropertyChanged(nameof(IsCommonKeyInvalid));
+        OnPropertyChanged(nameof(IsTitleKeyInvalid));
+        OnPropertyChanged(nameof(IsAncastKeyInvalid));
         UpdateChecklist();
     }
 

@@ -1,34 +1,62 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Moon_WiiVC_Injector.App">
+             x:Class="Moon_WiiVC_Injector.App"
+             RequestedThemeVariant="Default">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="KeyValidBrush" Color="#107c10"/>
+          <SolidColorBrush x:Key="KeyInvalidBrush" Color="#c42b1c"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="TextControlBackground" Color="#2B2B2B"/>
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#323232"/>
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#2B2B2B"/>
+          <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="#252525"/>
+          <SolidColorBrush x:Key="KeyValidBrush" Color="#6ccb5f"/>
+          <SolidColorBrush x:Key="KeyInvalidBrush" Color="#ff99a4"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
   <Application.Styles>
-    <StyleInclude Source="avares://Avalonia.Themes.Fluent/FluentTheme.xaml"/>
-    <!-- Global styling to match the classic WinForms light gray theme and fix white hovers -->
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <ColorPaletteResources x:Key="Dark"
+                               RegionColor="#202020"
+                               AltHigh="#2B2B2B"/>
+      </FluentTheme.Palettes>
+    </FluentTheme>
+    <!-- Preserve the compact layout; Fluent supplies colors for every control state. -->
     <Style Selector="TextBlock">
-      <Setter Property="Foreground" Value="Black"/>
       <Setter Property="FontSize" Value="12"/>
     </Style>
     <Style Selector="TextBox">
-      <Setter Property="Background" Value="White"/>
-      <Setter Property="Foreground" Value="Black"/>
-      <Setter Property="BorderBrush" Value="#a0a0a0"/>
       <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="CornerRadius" Value="0"/>
     </Style>
-    <Style Selector="TextBox:read-only /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="{Binding $parent[TextBox].Background}"/>
-      <Setter Property="BorderBrush" Value="{Binding $parent[TextBox].BorderBrush}"/>
+    <Style Selector="Button">
+      <Setter Property="CornerRadius" Value="0"/>
+      <Setter Property="Padding" Value="6,2"/>
     </Style>
-    <Style Selector="TextBox:read-only:pointerover /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="{Binding $parent[TextBox].Background}"/>
-      <Setter Property="BorderBrush" Value="{Binding $parent[TextBox].BorderBrush}"/>
+    <Style Selector="RadioButton, CheckBox, TabItem">
+      <Setter Property="FontSize" Value="12"/>
     </Style>
-    <Style Selector="TextBox:read-only:focus /template/ Border#PART_BorderElement">
-      <Setter Property="Background" Value="{Binding $parent[TextBox].Background}"/>
-      <Setter Property="BorderBrush" Value="{Binding $parent[TextBox].BorderBrush}"/>
+    <Style Selector="CheckBox.checklist">
+      <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+    <Style Selector="TabItem">
+      <Setter Property="Padding" Value="8,4"/>
     </Style>
     <Style Selector="TextBox.key-box">
       <Setter Property="BorderThickness" Value="1.5"/>
+    </Style>
+    <Style Selector="TextBox.key-box.valid">
+      <Setter Property="BorderBrush" Value="{DynamicResource KeyValidBrush}"/>
+    </Style>
+    <Style Selector="TextBox.key-box.invalid">
+      <Setter Property="BorderBrush" Value="{DynamicResource KeyInvalidBrush}"/>
     </Style>
     <Style Selector="TextBox.key-box /template/ Border#PART_BorderElement">
       <Setter Property="BorderBrush" Value="{Binding $parent[TextBox].BorderBrush}"/>
@@ -42,90 +70,11 @@
     <Style Selector="TextBox.key-box:read-only /template/ Border#PART_BorderElement">
       <Setter Property="BorderBrush" Value="{Binding $parent[TextBox].BorderBrush}"/>
     </Style>
-    <Style Selector="Button">
-      <Setter Property="Background" Value="#e1e1e1"/>
-      <Setter Property="Foreground" Value="Black"/>
-      <Setter Property="BorderBrush" Value="#adadad"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="0"/>
-      <Setter Property="Padding" Value="6,2"/>
+    <Style Selector="TextBlock.key-status.valid">
+      <Setter Property="Foreground" Value="{DynamicResource KeyValidBrush}"/>
     </Style>
-    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#d5d5d5"/>
-      <Setter Property="Foreground" Value="Black"/>
-      <Setter Property="BorderBrush" Value="#9c9c9c"/>
-    </Style>
-    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#c0c0c0"/>
-      <Setter Property="Foreground" Value="Black"/>
-      <Setter Property="BorderBrush" Value="#808080"/>
-    </Style>
-    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#f0f0f0"/>
-      <Setter Property="Foreground" Value="#a0a0a0"/>
-      <Setter Property="BorderBrush" Value="#d0d0d0"/>
-    </Style>
-    <Style Selector="RadioButton">
-      <Setter Property="Foreground" Value="Black"/>
-      <Setter Property="FontSize" Value="12"/>
-    </Style>
-    <Style Selector="RadioButton /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Foreground" Value="Black"/>
-    </Style>
-    <Style Selector="RadioButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Foreground" Value="Black"/>
-    </Style>
-    <Style Selector="RadioButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Foreground" Value="Black"/>
-    </Style>
-    <Style Selector="RadioButton:disabled /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Foreground" Value="#a0a0a0"/>
-    </Style>
-
-    <Style Selector="CheckBox">
-      <Setter Property="Foreground" Value="Black"/>
-      <Setter Property="FontSize" Value="12"/>
-    </Style>
-    <Style Selector="CheckBox.checklist">
-      <Setter Property="FontWeight" Value="Bold"/>
-    </Style>
-    <Style Selector="CheckBox /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Foreground" Value="Black"/>
-    </Style>
-    <Style Selector="CheckBox:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Foreground" Value="Black"/>
-    </Style>
-    <Style Selector="CheckBox:pressed /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Foreground" Value="Black"/>
-    </Style>
-    <Style Selector="CheckBox:disabled /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Foreground" Value="#a0a0a0"/>
-    </Style>
-    <Style Selector="TabControl">
-      <Setter Property="Background" Value="#f0f0f0"/>
-    </Style>
-    <Style Selector="TabItem">
-      <Setter Property="Foreground" Value="Black"/>
-      <Setter Property="FontSize" Value="12"/>
-      <Setter Property="Padding" Value="8,4"/>
-    </Style>
-    <Style Selector="TabItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#e0e0e0"/>
-      <Setter Property="Foreground" Value="Black"/>
-    </Style>
-    <Style Selector="TabItem:selected /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="Transparent"/>
-      <Setter Property="Foreground" Value="#007acc"/>
-    </Style>
-    <Style Selector="TabItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="Transparent"/>
-      <Setter Property="Foreground" Value="#007acc"/>
-    </Style>
-    <Style Selector="TextBox:read-only">
-      <Setter Property="Foreground" Value="{Binding $parent[TextBox].Foreground}"/>
-    </Style>
-    <Style Selector="ProgressBar /template/ TextBlock">
-      <Setter Property="Foreground" Value="Black"/>
+    <Style Selector="TextBlock.key-status.invalid">
+      <Setter Property="Foreground" Value="{DynamicResource KeyInvalidBrush}"/>
     </Style>
   </Application.Styles>
 </Application>

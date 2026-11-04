@@ -4,9 +4,6 @@
         x:Class="Moon_WiiVC_Injector.SdCardMenuAvalonia"
         x:DataType="vm:SdCardViewModel"
         Title="Nintendont SD Card Menu..."
-        RequestedThemeVariant="Light"
-        Background="#f0f0f0"
-        Foreground="Black"
         Width="340" Height="580">
   <ScrollViewer>
     <StackPanel Margin="8" Spacing="8">
@@ -19,7 +16,7 @@
       <TextBlock Text="{Binding ActionStatus}" TextAlignment="Center" />
       <Button Content="Download Latest Nintendont from GitHub" Command="{Binding UpdateNintendontCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
 
-      <Border BorderBrush="#adadad" BorderThickness="1" CornerRadius="4" Padding="8">
+      <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="8">
         <StackPanel Spacing="8">
           <TextBlock Text="Nintendont Configuration" FontWeight="Bold"/>
           <WrapPanel>

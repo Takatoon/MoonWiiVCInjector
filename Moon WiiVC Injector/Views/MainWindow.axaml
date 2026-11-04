@@ -7,8 +7,6 @@
         Width="680"
         Height="620"
         WindowStartupLocation="CenterScreen"
-        Background="#f0f0f0"
-        Foreground="Black"
         DragDrop.AllowDrop="True">
 
   <Grid RowDefinitions="Auto,*,Auto" Margin="10">
@@ -26,7 +24,7 @@
     </Grid>
 
     <!-- Tab Control -->
-    <TabControl Grid.Row="1" Name="MainTabs" IsEnabled="{Binding !IsBuilding}" BorderBrush="#adadad" BorderThickness="1" Padding="0">
+    <TabControl Grid.Row="1" Name="MainTabs" IsEnabled="{Binding !IsBuilding}" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Padding="0">
       
       <!-- Tab 1: Required Source Files -->
       <TabItem Header="Required Source Files">
@@ -60,7 +58,7 @@
             <StackPanel Grid.Column="0" Spacing="6" HorizontalAlignment="Left">
               <Button Name="RepoDownload" Content="{Binding RepoDownloadButtonText}" Command="{Binding DownloadRepoCommand}" IsEnabled="{Binding CanRetryDownloadRepo}" Width="140" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
               <TextBlock Text="Icon Preview (128x128)" Margin="0,4,0,2"/>
-              <Border Width="128" Height="128" BorderBrush="#adadad" BorderThickness="1" Background="White" HorizontalAlignment="Left">
+              <Border Width="128" Height="128" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Background="{DynamicResource SystemControlBackgroundAltHighBrush}" HorizontalAlignment="Left">
                 <Image Name="IconPreviewBox" Source="{Binding IconPreview}" Width="128" Height="128"/>
               </Border>
             </StackPanel>
@@ -68,7 +66,7 @@
             <!-- Right Side: Banner Preview -->
             <StackPanel Grid.Column="1" Spacing="4">
               <TextBlock Text="Banner Preview (1280x720)"/>
-              <Border Height="176" BorderBrush="#adadad" BorderThickness="1" Background="White">
+              <Border Height="176" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
                 <Image Name="BannerPreviewBox" Source="{Binding BannerPreview}" Stretch="Uniform"/>
               </Border>
             </StackPanel>
@@ -98,13 +96,13 @@
           <Grid Grid.Row="4" Grid.ColumnSpan="2" ColumnDefinitions="180,*" Margin="0,10,0,0">
             <StackPanel Grid.Column="0" Spacing="4">
               <TextBlock Text="Boot Logo Preview (170x42)"/>
-              <Border Width="170" Height="42" BorderBrush="#adadad" BorderThickness="1" Background="White" HorizontalAlignment="Left">
+              <Border Width="170" Height="42" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Background="{DynamicResource SystemControlBackgroundAltHighBrush}" HorizontalAlignment="Left">
                 <Image Name="LogoPreviewBox" Source="{Binding LogoPreview}" Stretch="Uniform"/>
               </Border>
             </StackPanel>
             <StackPanel Grid.Column="1" Spacing="4">
               <TextBlock Text="GamePad Banner Preview (854x480)"/>
-              <Border Height="140" BorderBrush="#adadad" BorderThickness="1" Background="White">
+              <Border Height="140" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
                 <Image Name="DrcPreviewBox" Source="{Binding DrcPreview}" Stretch="Uniform"/>
               </Border>
             </StackPanel>
@@ -115,7 +113,7 @@
       <!-- Tab 3: GamePad/Meta Options -->
       <TabItem Header="GamePad/Meta Options">
         <StackPanel Margin="10" Spacing="10">
-          <Border BorderBrush="#adadad" BorderThickness="1" Padding="10">
+          <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Padding="10">
             <StackPanel Spacing="6">
               <TextBlock Text="GamePad Emulation Mode (Only applicable for Wii Retail Injections / vWii NAND Title Launcher)" FontWeight="SemiBold"/>
               <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
@@ -156,14 +154,14 @@
           <CheckBox Name="DisableNintendontAutoboot" Content="Disable Autoboot" IsChecked="{Binding DisableNintendontAutoboot}"/>
           <CheckBox Name="C2WPatchFlag" Content="Enable cafe2wii patching (NOT RECOMMENDED)" IsChecked="{Binding C2WPatchFlag}"/>
 
-          <Border Name="AncastKeyBorder" BorderBrush="#adadad" BorderThickness="1" Padding="10" Margin="0,10,0,0" IsVisible="{Binding IsAncastKeyVisible}">
+          <Border Name="AncastKeyBorder" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Padding="10" Margin="0,10,0,0" IsVisible="{Binding IsAncastKeyVisible}">
             <StackPanel Spacing="6">
               <TextBlock Text="Wii U Ancast Key" FontWeight="SemiBold"/>
               <Grid ColumnDefinitions="*,Auto">
-                <TextBox Grid.Column="0" Name="AncastKey" Classes="key-box" Text="{Binding AncastKey}" IsReadOnly="{Binding IsAncastKeyReadOnly}" BorderBrush="{Binding AncastKeyBorderBrush}" DoubleTapped="OnKeyTextBoxDoubleTapped"/>
+                <TextBox Grid.Column="0" Name="AncastKey" Classes="key-box" Text="{Binding AncastKey}" IsReadOnly="{Binding IsAncastKeyReadOnly}" Classes.valid="{Binding IsAncastKeyValid}" Classes.invalid="{Binding IsAncastKeyInvalid}" DoubleTapped="OnKeyTextBoxDoubleTapped"/>
                 <Button Grid.Column="1" Name="SaveAncastKeyButton" Content="Save Key" Command="{Binding SaveAncastKeyCommand}" IsEnabled="{Binding CanSaveAncastKey}" Margin="4,0,0,0"/>
               </Grid>
-              <TextBlock Text="{Binding AncastKeyStatusText}" Foreground="{Binding AncastKeyStatusColor}" FontSize="11" FontWeight="SemiBold" Margin="2,-2,0,0" IsVisible="{Binding AncastKeyStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+              <TextBlock Text="{Binding AncastKeyStatusText}" Classes="key-status" Classes.valid="{Binding IsAncastKeyValid}" Classes.invalid="{Binding IsAncastKeyInvalid}" FontSize="11" FontWeight="SemiBold" Margin="2,-2,0,0" IsVisible="{Binding AncastKeyStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             </StackPanel>
           </Border>
         </StackPanel>
@@ -179,22 +177,22 @@
             <CheckBox Name="KeysCheck" Classes="checklist" Content="Common &amp; Title keys specified" IsChecked="{Binding KeysCheck}" IsHitTestVisible="False" Focusable="False"/>
             <CheckBox Name="AdvanceCheck" Classes="checklist" Content="Advanced configuration done" IsChecked="{Binding AdvanceCheck}" IsHitTestVisible="False" Focusable="False"/>
 
-            <Border BorderBrush="#adadad" BorderThickness="1" Padding="10" Margin="0,10,0,0">
+            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" Padding="10" Margin="0,10,0,0">
               <StackPanel Spacing="6">
                 <TextBlock Text="Keys Configuration" FontWeight="SemiBold"/>
                 <TextBlock Text="Wii U Common Key:"/>
                 <Grid ColumnDefinitions="*,Auto">
-                  <TextBox Grid.Column="0" Name="WiiUCommonKey" Classes="key-box" Text="{Binding WiiUCommonKey}" IsReadOnly="{Binding IsCommonKeyReadOnly}" BorderBrush="{Binding CommonKeyBorderBrush}" DoubleTapped="OnKeyTextBoxDoubleTapped"/>
+                  <TextBox Grid.Column="0" Name="WiiUCommonKey" Classes="key-box" Text="{Binding WiiUCommonKey}" IsReadOnly="{Binding IsCommonKeyReadOnly}" Classes.valid="{Binding IsCommonKeyValid}" Classes.invalid="{Binding IsCommonKeyInvalid}" DoubleTapped="OnKeyTextBoxDoubleTapped"/>
                   <Button Grid.Column="1" Name="SaveCommonKeyButton" Content="Save" Command="{Binding SaveCommonKeyCommand}" IsEnabled="{Binding CanSaveCommonKey}" Margin="4,0,0,0"/>
                 </Grid>
-                <TextBlock Text="{Binding CommonKeyStatusText}" Foreground="{Binding CommonKeyStatusColor}" FontSize="11" FontWeight="SemiBold" Margin="2,-2,0,0" IsVisible="{Binding CommonKeyStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                <TextBlock Text="{Binding CommonKeyStatusText}" Classes="key-status" Classes.valid="{Binding IsCommonKeyValid}" Classes.invalid="{Binding IsCommonKeyInvalid}" FontSize="11" FontWeight="SemiBold" Margin="2,-2,0,0" IsVisible="{Binding CommonKeyStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
                 <TextBlock Text="Base Game Title Key (USA / EUR Rhythm Heaven):" Margin="0,4,0,0"/>
                 <Grid ColumnDefinitions="*,Auto">
-                  <TextBox Grid.Column="0" Name="TitleKey" Classes="key-box" Text="{Binding TitleKey}" IsReadOnly="{Binding IsTitleKeyReadOnly}" BorderBrush="{Binding TitleKeyBorderBrush}" DoubleTapped="OnKeyTextBoxDoubleTapped"/>
+                  <TextBox Grid.Column="0" Name="TitleKey" Classes="key-box" Text="{Binding TitleKey}" IsReadOnly="{Binding IsTitleKeyReadOnly}" Classes.valid="{Binding IsTitleKeyValid}" Classes.invalid="{Binding IsTitleKeyInvalid}" DoubleTapped="OnKeyTextBoxDoubleTapped"/>
                   <Button Grid.Column="1" Name="SaveTitleKeyButton" Content="Save" Command="{Binding SaveTitleKeyCommand}" IsEnabled="{Binding CanSaveTitleKey}" Margin="4,0,0,0"/>
                 </Grid>
-                <TextBlock Text="{Binding TitleKeyStatusText}" Foreground="{Binding TitleKeyStatusColor}" FontSize="11" FontWeight="SemiBold" Margin="2,-2,0,0" IsVisible="{Binding TitleKeyStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                <TextBlock Text="{Binding TitleKeyStatusText}" Classes="key-status" Classes.valid="{Binding IsTitleKeyValid}" Classes.invalid="{Binding IsTitleKeyInvalid}" FontSize="11" FontWeight="SemiBold" Margin="2,-2,0,0" IsVisible="{Binding TitleKeyStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
               </StackPanel>
             </Border>
           </StackPanel>
@@ -213,7 +211,7 @@
       <!-- Tab 6: Build Logs -->
       <TabItem Header="Build Logs">
         <Grid RowDefinitions="*,Auto" Margin="10">
-          <TextBox Grid.Row="0" Name="LogOutputBox" Text="{Binding LogOutput}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas, monospace" FontSize="11" Background="#1e1e1e" Foreground="#d4d4d4"/>
+          <TextBox Grid.Row="0" Name="LogOutputBox" Text="{Binding LogOutput}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas, monospace" FontSize="11"/>
           <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0" HorizontalAlignment="Right">
             <Button Name="CopyLogsButton" Content="Copy Logs" Command="{Binding CopyLogsCommand}" Width="100" HorizontalContentAlignment="Center"/>
             <Button Name="ClearLogsButton" Content="Clear" Command="{Binding ClearLogsCommand}" Width="80" HorizontalContentAlignment="Center"/>
