@@ -1,5 +1,61 @@
 # 🚀 Moon WiiVC Injector - Modernized Edition
 
+## Nintendont per-game configuration — development roadmap
+
+This fork aims to add per-game Nintendont configuration support to Moon WiiVC Injector, with changes developed incrementally for potential contribution to the upstream project.
+
+The integration builds on **[V10lator's Nintendont autoboot forwarder](https://github.com/V10lator/nintendont-autoboot-forwarder)**, based on the original work by **[FIX94](https://github.com/FIX94/nintendont-autoboot-forwarder)**. Credit for the forwarder and its configuration loading behavior belongs to its authors.
+
+**Status:** planning. The phases below are not yet implemented.
+
+### Phase 1 — Integrate V10lator's forwarder
+
+Replace the default GameCube autobooter with V10lator's forwarder, without modifying its source code.
+
+The existing **Disable Autoboot** checkbox will select the DOL included in new GameCube injections:
+
+| Disable Autoboot | Included DOL |
+|---|---|
+| Unchecked | V10lator's autoboot forwarder |
+| Checked | Existing non-autoboot Nintendont forwarder |
+
+The previous default autobooter will remain in the repository resources for reference and recovery.
+
+V10lator's forwarder searches for a configuration in this order:
+
+1. `SD:/nintendont/configs/XXXX.bin` — game-specific configuration.
+2. `nincfg.bin` embedded in the injection.
+3. `SD:/nincfg.bin` — global configuration.
+
+`XXXX` comes from the first four characters of the GameCube disc ID, not the Wii U Title ID. Configurations are selected by priority; their fields are not merged.
+
+Phase 1 will use externally prepared configuration files. It will not add an editor or embed configurations. Nintendont must still be installed at `SD:/apps/nintendont/boot.dol`.
+
+### Phase 2 — Embed a configuration in each injection
+
+Add a **Nintendont** tab for GameCube injections, with an optional configuration editor based on the existing SD Card Menu.
+
+- Embedding will be disabled by default.
+- When enabled, Moon will generate and include `nincfg.bin` in the injection.
+- A game-specific configuration on SD will take precedence.
+- A shared, tested serializer will also correct the existing global configuration generator.
+
+### Phase 3 — Manage game-specific SD configurations
+
+Extend the **Nintendont SD Card Menu** to create, import, edit and export `XXXX.bin` files.
+
+This phase will reuse the editor and serializer from Phase 2, with explicit handling of incompatible versions, overwrite confirmation and backups.
+
+### Compatibility and validation
+
+The integration will pin the forwarder revision and document its build, configuration format and binary checksum. The initial reference is CFG v10; older files must not be assumed compatible.
+
+Each phase will distinguish automated checks from tests performed on real Wii U hardware. Existing installed injections will require rebuilding to use the new forwarder.
+
+Changes to Wii Retail, Wii Homebrew and vWii NAND injection behavior, and unrelated GamePad patches, are outside this work.
+
+---
+
 [![Build Status](https://img.shields.io/badge/Build-Passing-success?style=for-the-badge&logo=.net&color=31c754)](https://github.com/Rodrigo-Matsuura/TeconmoonWiiVCInjector)
 [![Framework](https://img.shields.io/badge/.NET-10.0%20(LTS)-512bd4?style=for-the-badge&logo=dotnet)](https://dotnet.microsoft.com/)
 [![UI Framework](https://img.shields.io/badge/UI-Avalonia%2012-purple?style=for-the-badge&logo=avalonia)](https://avaloniaui.net/)
@@ -107,7 +163,7 @@ Special thanks and full attribution to the authors and projects of the Wii, Wii 
 * **[piratesephiroth](https://github.com/piratesephiroth/TeconmoonWiiVCInjector/commits?author=piratesephiroth)**: Maintainer of the enhanced upstream fork, contributing numerous bug fixes, stability improvements, and features.
 * **[TeconMoon](https://github.com/TeconMoon/teconmoon-wiivc-injector)**: Creator of the original *TeconMoon's WiiVC Injector*.
 * **[QuzarDC](https://github.com/piratesephiroth/TeconmoonWiiVCInjector/issues?q=is%3Apr+is%3Aopen+author%3AQuzarDC)**: Contributor of upstream improvements
-* **[V10lator](https://github.com/piratesephiroth/TeconmoonWiiVCInjector/issues?q=is:pr+is:open+author:V10lator)**: Contributor of upstream improvements
+* **[V10lator](https://github.com/V10lator)**: Author of the [Nintendont autoboot forwarder](https://github.com/V10lator/nintendont-autoboot-forwarder) targeted by this fork's per-game configuration roadmap, and contributor of upstream improvements.
 * **[FIX94](https://github.com/FIX94)**:
   * **[NFS2ISO2NFS](https://github.com/FIX94/NFS2ISO2NFS)**: Wii U NFS partition extraction and ISO manipulation.
   * **[GetExtTypePatcher](https://github.com/FIX94/GetExtTypePatcher)**: PowerPC Classic Controller patcher for `main.dol` (native C# port in `DolPatcher.cs`).
