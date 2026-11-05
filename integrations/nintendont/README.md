@@ -80,6 +80,30 @@ The installed Nintendont loader, not this forwarder, performs any supported CFG
 migration in memory. Updating Moon does not update existing installed injects;
 rebuild and reinstall them to change their DOL.
 
+## CFG v10 model and serializer
+
+The configuration model, validator and serializer use the pinned 548-byte,
+big-endian CFG v10 format, including its PowerPC alignment padding. The editor
+maps its settings to an immutable configuration snapshot. Other CFG versions
+and malformed files are explicitly rejected rather than silently converted.
+The serializer also provides injection-specific boot-field normalization.
+
+Run the dependency-free checks from the repository root:
+
+```sh
+dotnet run --project integrations/nintendont/tests/SerializationTests/SerializationTests.csproj -c Release
+```
+
+The checks cover editor mappings, validation, binary round trips and an
+independent PowerPC C fixture. `fixtures/combined-v10.bin` is generated from
+`fixtures/combined-v10.c` using the pinned compiler and upstream header.
+Extract `upstream/source.tar.gz` to `/tmp/forwarder` in the build container:
+
+```sh
+powerpc-eabi-gcc -std=c11 -c combined-v10.c -I/tmp/forwarder/Nintendont/common/include -o /tmp/fixture.o
+powerpc-eabi-objcopy -O binary --only-section=.cfg_fixture /tmp/fixture.o combined-v10.bin
+```
+
 ## Validation status
 
 The following PC checks passed:

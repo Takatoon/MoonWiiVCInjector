@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NKit\NKit.csproj" />
+    <InternalsVisibleTo Include="Moon.WiiVC.Injector.Nintendont.Tests" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Resources\TOOLDIR.zip">
