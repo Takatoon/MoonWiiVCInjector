@@ -67,8 +67,10 @@ Configuration search order:
 2. `nincfg.bin` at the root of the Wii virtual ISO filesystem.
 3. `SD:/nincfg.bin`.
 
-This phase does not embed a configuration. Supply a compatible configuration
-externally and install Nintendont at `SD:/apps/nintendont/boot.dol`.
+Install Nintendont at `SD:/apps/nintendont/boot.dol`. With **Embed custom config**
+enabled in the Nintendont tab, Moon writes CFG v10 to `files/nincfg.bin`
+before rebuilding the GC wrapper ISO. Otherwise supply a compatible SD
+configuration externally. No SD file is written or migrated by this feature.
 The search does not merge configurations. A successful read does not establish
 semantic validity: the upstream forwarder does not validate the CFG version or
 magic before passing it on. A short per-game file may fall back to another
@@ -103,6 +105,17 @@ Extract `upstream/source.tar.gz` to `/tmp/forwarder` in the build container:
 powerpc-eabi-gcc -std=c11 -c combined-v10.c -I/tmp/forwarder/Nintendont/common/include -o /tmp/fixture.o
 powerpc-eabi-objcopy -O binary --only-section=.cfg_fixture /tmp/fixture.o combined-v10.bin
 ```
+
+## Embedded configuration
+
+The editor creates an immutable configuration snapshot before a build starts.
+Embedding requires a GameCube injection with autoboot enabled. Before rebuilding
+the virtual ISO, the build engine writes `files/nincfg.bin` using the serializer's
+injection-specific settings: autoboot enabled, `GamePath="di"`, an empty cheat
+path, USB disabled, and zeroed MaxPads, GameID and NetworkProfile fields.
+The production insertion checks verify the destination and preservation of both
+game disc files, and reject unsupported injection modes or missing settings.
+Full injection builds and real Wii U validation remain pending.
 
 ## Validation status
 

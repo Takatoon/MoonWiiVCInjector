@@ -14,6 +14,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Moon_WiiVC_Injector.Models;
+using Moon_WiiVC_Injector.Core.Nintendont;
 using Moon_WiiVC_Injector.Properties;
 using Moon_WiiVC_Injector.Services;
 
@@ -1587,6 +1588,18 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     public async Task BuildAsync()
     {
+        bool embedNintendontConfig = _systemType == "gcn" && !DisableNintendontAutoboot && EmbedNintendontConfig;
+        NintendontConfig? nintendontConfig = null;
+        if (embedNintendontConfig)
+        {
+            try { nintendontConfig = NintendontConfig.ToConfig(); }
+            catch (ArgumentException ex)
+            {
+                await _dialogService.ShowMessageAsync(ex.Message, "Invalid Nintendont configuration");
+                return;
+            }
+        }
+
         IsBuilding = true;
         CanCancel = true;
         BuildProgress = 0;
@@ -1697,6 +1710,8 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
             WiiVMC = WiiVMC,
             DisableTrimming = DisableTrimming,
             DisableNintendontAutoboot = DisableNintendontAutoboot,
+            EmbedNintendontConfig = embedNintendontConfig,
+            NintendontConfig = nintendontConfig,
             C2WPatch = C2WPatchFlag,
             LRPatch = LrPatch,
             SoundDir = BootSoundText,

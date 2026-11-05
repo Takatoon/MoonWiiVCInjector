@@ -89,7 +89,7 @@ byte[] combined = NintendontConfigSerializer.SerializeForInjection(ui.ToConfig()
 Check(combined.SequenceEqual(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "combined-v10.bin"))), "independent PowerPC C fixture matches all bytes");
 Check(Read(combined, 12) == 0x50034 && combined[541] == 120 && combined[542] == 236 && Read(combined, 544) == 4, "combined offsets and signed bytes");
 Check(NintendontConfigSerializer.Serialize(NintendontConfigSerializer.Deserialize(combined)).SequenceEqual(combined), "binary round trip");
-var paths = new NintendontConfig { GamePath = new string('a', 254), CheatPath = "Ã©", GameId = 0x474D5345 };
+var paths = new NintendontConfig { GamePath = new string('a', 254), CheatPath = "é", GameId = 0x474D5345 };
 Check(NintendontConfigSerializer.Deserialize(NintendontConfigSerializer.Serialize(paths)) == paths, "path boundaries, UTF8, and GameID round trip");
 Reject(() => NintendontConfigSerializer.Serialize(paths with { GamePath = new string('a', 255) }), "path overflow");
 Reject(() => NintendontConfigSerializer.Serialize(paths with { CheatPath = "bad\0path" }), "embedded NUL");
@@ -136,4 +136,29 @@ var sanitized = NintendontConfigSerializer.Deserialize(NintendontConfigSerialize
 Check(sanitized.Flags == NintendontFlags.AutoBoot && sanitized.GamePath == "di" && sanitized.CheatPath == "" &&
     sanitized.MaxPads == 0 && sanitized.NetworkProfile == 0 && sanitized.GameId == 0, "injection boot fields normalized");
 
-Console.WriteLine($"PASS: {checks} checks (binary ABI, editor mappings and validation).");
+// Test the actual production insertion without games, keys, network or packaging.
+string temp = Path.Combine(Path.GetTempPath(), "moon-nintendont-tests-" + Guid.NewGuid().ToString("N"));
+try
+{
+    BaseIsoTemplate.CreateBaseDirectory(temp);
+    string game = Path.Combine(temp, "files", "game.iso"), disc2 = Path.Combine(temp, "files", "disc2.iso");
+    File.WriteAllBytes(game, [1, 2, 3]); File.WriteAllBytes(disc2, [4, 5, 6]);
+    string destination = Path.Combine(temp, "files", "nincfg.bin");
+    foreach (string mode in new[] { "wii", "dol", "gcn", "wiiware" })
+    {
+        BuildEngine.WriteEmbeddedNintendontConfig(temp, new() { SystemType = mode });
+        Check(!File.Exists(destination), $"embed off: no file for {mode}");
+    }
+    var options = new BuildOptions { SystemType = "gcn", EmbedNintendontConfig = true, NintendontConfig = ui.ToConfig() };
+    BuildEngine.WriteEmbeddedNintendontConfig(temp, options);
+    Check(File.ReadAllBytes(destination).SequenceEqual(combined), "embed on: correct file at ISO filesystem root");
+    Check(File.ReadAllBytes(game).SequenceEqual(new byte[] { 1, 2, 3 }) && File.ReadAllBytes(disc2).SequenceEqual(new byte[] { 4, 5, 6 }), "both game files intact");
+    options.DisableNintendontAutoboot = true;
+    Reject(() => BuildEngine.WriteEmbeddedNintendontConfig(temp, options), "legacy without autoboot cannot embed");
+    options.DisableNintendontAutoboot = false; options.NintendontConfig = null;
+    Reject(() => BuildEngine.WriteEmbeddedNintendontConfig(temp, options), "missing embedded settings");
+    options.SystemType = "wii";
+    Reject(() => BuildEngine.WriteEmbeddedNintendontConfig(temp, options), "embedding rejected outside GC");
+}
+finally { Directory.Delete(temp, recursive: true); }
+Console.WriteLine($"PASS: {checks} checks (binary ABI, validation and embedded insertion).");

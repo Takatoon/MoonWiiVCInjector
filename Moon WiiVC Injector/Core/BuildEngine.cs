@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Moon_WiiVC_Injector.Core;
+using Moon_WiiVC_Injector.Core.Nintendont;
 using Moon_WiiVC_Injector.Core.NusPacker;
 using Moon_WiiVC_Injector.Services;
 
@@ -34,6 +35,8 @@ internal sealed class BuildOptions
     public bool WiiVMC { get; set; }
     public bool DisableTrimming { get; set; }
     public bool DisableNintendontAutoboot { get; set; }
+    public bool EmbedNintendontConfig { get; set; }
+    public NintendontConfig? NintendontConfig { get; set; }
     public bool C2WPatch { get; set; }
     public bool LRPatch { get; set; }
 
@@ -472,6 +475,7 @@ internal sealed class BuildEngine(BuildOptions options, IProgress<(string Messag
 
                 // V10lator autobooter, or the existing non-autoboot forwarder.
                 Core.BaseIsoTemplate.CopyNintendontDol(Path.Combine(tempIsoBase, "sys", "main.dol"), _options.DisableNintendontAutoboot);
+                WriteEmbeddedNintendontConfig(tempIsoBase, _options);
 
                 UpdateStatus("Copying GameCube disc image...", 25);
                 File.Copy(ogFilePath, Path.Combine(tempIsoBase, "files", "game.iso"), true);
@@ -813,8 +817,27 @@ internal sealed class BuildEngine(BuildOptions options, IProgress<(string Messag
         }
     }
 
+    private static void ValidateNintendontConfig(BuildOptions options)
+    {
+        if (!options.EmbedNintendontConfig) return;
+        if (options.SystemType != "gcn" || options.DisableNintendontAutoboot)
+            throw new ArgumentException("Embedded Nintendont configuration requires a GameCube injection with autoboot enabled.");
+        if (options.NintendontConfig is null)
+            throw new ArgumentException("An embedded Nintendont configuration was requested but no settings were provided.");
+        NintendontConfigValidator.Validate(options.NintendontConfig);
+    }
+
+    internal static void WriteEmbeddedNintendontConfig(string tempIsoBase, BuildOptions options)
+    {
+        ValidateNintendontConfig(options);
+        if (!options.EmbedNintendontConfig) return;
+        byte[] bytes = NintendontConfigSerializer.SerializeForInjection(options.NintendontConfig!);
+        File.WriteAllBytes(Path.Combine(tempIsoBase, "files", "nincfg.bin"), bytes);
+    }
+
     private void ValidatePrerequisites()
     {
+        ValidateNintendontConfig(_options);
         // 1. Verify Java runtime only if base files still need to be downloaded via JNUSTool.
         // Packaging no longer requires Java as it uses native C# NusPacker.
         bool needsBaseDownload = false;
