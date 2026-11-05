@@ -94,7 +94,11 @@ with zero for Auto. Video offset is signed. Deflicker includes both FORCE and
 FORCE_DF, and progressive coordinates Config bit 6 with VideoMode bit 4.
 
 Inactive Multi Memcard, video-type and PAL50 selections are retained in the UI
-but omitted from the generated settings. Both the per-injection tab and the
+but omitted from the generated settings. Patch PAL50 is available with Force
+Progressive, or with Force/Force Deflicker targeting NTSC or MPAL. This follows
+the [PAL50 patch branches in Nintendont revision c683db3](https://github.com/FIX94/Nintendont/blob/c683db301c941a64e6fe5cef6ac079bd1a726074/kernel/Patch.c#L2334-L2413):
+without Force Progressive, forcing PAL50 or PAL60 skips the PAL50 conversion.
+Both the per-injection tab and the
 800-pixel-wide SD Card Menu host the same `NintendontConfigView` and use separate
 instances of its shared ViewModel. The global menu serializes the same model
 without forcing autoboot or `GamePath="di"`. It confirms replacements, backs up

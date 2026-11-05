@@ -125,12 +125,41 @@ Reject(() => new NintendontConfigViewModel { AutoVideoWidth = false, VideoWidth 
 Reject(() => new NintendontConfigViewModel { VideoOffset = -0.5m }.ToConfig(), "fractional offset");
 
 var notified = new HashSet<string?>();
-var reactive = new NintendontConfigViewModel { PatchPal50 = true, VideoTypeIndex = 3 };
+var reactive = new NintendontConfigViewModel { PatchPal50 = true, VideoTypeIndex = 0 };
 reactive.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
 reactive.VideoModeIndex = 2;
 Check(reactive.CanSelectVideoType && reactive.CanPatchPal50 && notified.Contains("CanSelectVideoType") && notified.Contains("CanPatchPal50"), "mode dependencies notify UI");
+notified.Clear(); reactive.VideoTypeIndex = 3;
+Check(!reactive.CanPatchPal50 && notified.Contains("CanPatchPal50") && reactive.PatchPal50 &&
+    !reactive.ToConfig().VideoMode.HasFlag(NintendontVideoMode.PatchPal50), "PAL60 disables patch, omits bit and retains selection");
+notified.Clear(); reactive.VideoTypeIndex = 1;
+Check(reactive.CanPatchPal50 && notified.Contains("CanPatchPal50") &&
+    reactive.ToConfig().VideoMode.HasFlag(NintendontVideoMode.PatchPal50), "MPAL restores retained patch and notifies UI");
+reactive.VideoTypeIndex = 3;
 reactive.VideoModeIndex = 0; notified.Clear(); reactive.ForceProgressive = true;
 Check(reactive.CanPatchPal50 && notified.Contains("CanPatchPal50") && reactive.VideoTypeIndex == 3 && reactive.PatchPal50, "progressive dependency and retained selections");
+
+// Match Nintendont's two PAL50 patch branches across every editor combination:
+// progressive always permits it; otherwise only Force/Deflicker to NTSC/MPAL.
+bool[,] interlacedPal50Support = {
+    { false, false, false, false }, // Auto
+    { true, true, false, false },   // Force: NTSC, MPAL, PAL50, PAL60
+    { true, true, false, false },   // Force (Deflicker)
+    { false, false, false, false }, // None
+};
+for (int mode = 0; mode < 4; mode++)
+    for (int type = 0; type < 4; type++)
+        foreach (bool progressive in new[] { false, true })
+        {
+            var patch = new NintendontConfigViewModel {
+                VideoModeIndex = mode, VideoTypeIndex = type,
+                ForceProgressive = progressive, PatchPal50 = true,
+            };
+            bool expected = progressive || interlacedPal50Support[mode, type];
+            Check(patch.CanPatchPal50 == expected, $"PAL50 availability {mode}/{type}/{progressive}");
+            var binary = NintendontConfigSerializer.Serialize(patch.ToConfig());
+            Check(((Read(binary, 12) & 0x20) != 0) == expected, $"PAL50 serialized bit {mode}/{type}/{progressive}");
+        }
 
 var sanitized = NintendontConfigSerializer.Deserialize(NintendontConfigSerializer.SerializeForInjection(new() {
     Flags = NintendontFlags.Usb | NintendontFlags.CheatPath | NintendontFlags.Debugger |

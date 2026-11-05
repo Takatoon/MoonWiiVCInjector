@@ -20,7 +20,15 @@ internal sealed class NintendontConfigViewModel : ViewModelBase
         }
     }
     public bool CanSelectVideoType => VideoModeIndex is 1 or 2;
-    public int VideoTypeIndex { get; set => SetProperty(ref field, value); }
+    public int VideoTypeIndex
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+                OnPropertyChanged(nameof(CanPatchPal50));
+        }
+    }
     public bool AutoVideoWidth { get; set => SetProperty(ref field, value); } = true;
     public decimal VideoWidth { get; set => SetProperty(ref field, value); } = 640;
     public decimal VideoOffset { get; set => SetProperty(ref field, value); }
@@ -35,7 +43,9 @@ internal sealed class NintendontConfigViewModel : ViewModelBase
                 OnPropertyChanged(nameof(CanPatchPal50));
         }
     }
-    public bool CanPatchPal50 => CanSelectVideoType || ForceProgressive;
+    // Nintendont only patches PAL50 to progressive output or forced NTSC/MPAL.
+    // https://github.com/FIX94/Nintendont/blob/c683db301c941a64e6fe5cef6ac079bd1a726074/kernel/Patch.c#L2334-L2413
+    public bool CanPatchPal50 => ForceProgressive || (CanSelectVideoType && VideoTypeIndex is 0 or 1);
     public bool PatchPal50 { get; set => SetProperty(ref field, value); }
     public int LanguageIndex { get; set => SetProperty(ref field, value); }
     public int GamepadSlotIndex { get; set => SetProperty(ref field, value); }
