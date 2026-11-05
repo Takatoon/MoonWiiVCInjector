@@ -109,7 +109,7 @@
         </Grid>
         <CheckBox Content="Wii U Widescreen" IsChecked="{Binding WiiUWidescreen}" ToolTip.Tip="Set Wii U output to 16:9 instead of 4:3. Games still rendering in 4:3 will appear stretched."/>
         <CheckBox Content="Force Widescreen" IsChecked="{Binding ForceWidescreen}" ToolTip.Tip="Patches game rendering; may cause visual issues or crashes."/>
-        <CheckBox Content="Force Progressive" IsChecked="{Binding ForceProgressive}" ToolTip.Tip="May cause a black screen in incompatible games."/>
+        <CheckBox Content="Force Progressive" IsChecked="{Binding ForceProgressive}" ToolTip.Tip="Patch supported video modes to 480p. Takes priority over Video Type when converting video modes. May cause a black screen in incompatible games."/>
         <CheckBox Content="Patch PAL50" IsChecked="{Binding PatchPal50}" IsEnabled="{Binding CanPatchPal50}" ToolTip.Tip="Allow PAL50 video modes to be converted to 480p with Force Progressive, or to NTSC/MPAL when that Video Type is forced. Has no effect when forcing PAL50/PAL60 without Force Progressive. May cause compatibility issues."/>
       </StackPanel>
     </Border>
