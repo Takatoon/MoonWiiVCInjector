@@ -89,7 +89,7 @@ byte[] combined = NintendontConfigSerializer.SerializeForInjection(ui.ToConfig()
 Check(combined.SequenceEqual(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "combined-v10.bin"))), "independent PowerPC C fixture matches all bytes");
 Check(Read(combined, 12) == 0x50034 && combined[541] == 120 && combined[542] == 236 && Read(combined, 544) == 4, "combined offsets and signed bytes");
 Check(NintendontConfigSerializer.Serialize(NintendontConfigSerializer.Deserialize(combined)).SequenceEqual(combined), "binary round trip");
-var paths = new NintendontConfig { GamePath = new string('a', 254), CheatPath = "é", GameId = 0x474D5345 };
+var paths = new NintendontConfig { GamePath = new string('a', 254), CheatPath = "Ã©", GameId = 0x474D5345 };
 Check(NintendontConfigSerializer.Deserialize(NintendontConfigSerializer.Serialize(paths)) == paths, "path boundaries, UTF8, and GameID round trip");
 Reject(() => NintendontConfigSerializer.Serialize(paths with { GamePath = new string('a', 255) }), "path overflow");
 Reject(() => NintendontConfigSerializer.Serialize(paths with { CheatPath = "bad\0path" }), "embedded NUL");
@@ -161,4 +161,60 @@ try
     Reject(() => BuildEngine.WriteEmbeddedNintendontConfig(temp, options), "embedding rejected outside GC");
 }
 finally { Directory.Delete(temp, recursive: true); }
-Console.WriteLine($"PASS: {checks} checks (binary ABI, validation and embedded insertion).");
+string globalDirectory = Path.Combine(Path.GetTempPath(), "moon-global-config-tests-" + Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(globalDirectory);
+try
+{
+    var dialogs = new TestDialogs { Folder = globalDirectory };
+    var sd = new SdCardViewModel(dialogs) { SelectedDrive = null };
+    sd.NintendontConfig.ForceWidescreen = true;
+    sd.NintendontConfig.LanguageIndex = 4;
+    sd.NintendontConfig.GamepadSlotIndex = 4;
+    await sd.GenerateConfigAsync();
+    string globalFile = Path.Combine(globalDirectory, "nincfg.bin");
+    byte[] globalBytes = File.ReadAllBytes(globalFile);
+    var global = NintendontConfigSerializer.Deserialize(globalBytes);
+    Check(global == sd.NintendontConfig.ToConfig(), "global menu uses shared model and serializer");
+    Check(global.Flags.HasFlag(NintendontFlags.ForceWidescreen) && !global.Flags.HasFlag(NintendontFlags.ForceProgressive), "global widescreen bit corrected");
+    Check(!global.Flags.HasFlag(NintendontFlags.AutoBoot) && global.GamePath == "", "global does not force injection boot settings");
+    Check(global.Language == NintendontLanguage.Spanish && global.WiiUGamepadSlot == 4, "global language and None slot");
+    Check(dialogs.LastTitle == "Information", "global save reports success");
+
+    dialogs.Overwrite = MessageBoxResult.No;
+    sd.NintendontConfig.ForceProgressive = true;
+    await sd.GenerateConfigAsync();
+    Check(File.ReadAllBytes(globalFile).SequenceEqual(globalBytes) && !File.Exists(globalFile + ".bak"), "declined overwrite leaves global file intact");
+    dialogs.Overwrite = MessageBoxResult.Yes;
+    await sd.GenerateConfigAsync();
+    Check(File.ReadAllBytes(globalFile + ".bak").SequenceEqual(globalBytes), "overwrite backs up previous global bytes");
+    byte[] replaced = File.ReadAllBytes(globalFile);
+    Check(NintendontConfigSerializer.Deserialize(replaced).Flags.HasFlag(NintendontFlags.ForceProgressive), "confirmed overwrite writes new settings");
+
+    sd.NintendontConfig.VideoOffset = 100;
+    await sd.GenerateConfigAsync();
+    Check(dialogs.LastTitle == "Error" && File.ReadAllBytes(globalFile).SequenceEqual(replaced), "invalid settings cannot truncate global file");
+    Check(!Directory.EnumerateFiles(globalDirectory, "*.tmp").Any(), "global writes leave no temporary files");
+    Check(ui.ForceWidescreen && !ReferenceEquals(ui, sd.NintendontConfig), "editors have independent state using the same model");
+}
+finally { Directory.Delete(globalDirectory, recursive: true); }
+Console.WriteLine($"PASS: {checks} checks (binary ABI, shared editor, validation, embedded insertion and global SD saving).");
+
+internal sealed class TestDialogs : IDialogService
+{
+    public string? Folder { get; set; }
+    public MessageBoxResult Overwrite { get; set; } = MessageBoxResult.Yes;
+    public string? LastTitle { get; private set; }
+    public Task<MessageBoxResult> ShowMessageAsync(string message, string title, MessageBoxButtons buttons = MessageBoxButtons.Ok)
+    {
+        LastTitle = title;
+        return Task.FromResult(title == "Replace global configuration" ? Overwrite :
+            buttons == MessageBoxButtons.YesNo ? MessageBoxResult.Yes : MessageBoxResult.Ok);
+    }
+    public Task<string?> OpenFolderDialogAsync(string title) => Task.FromResult(Folder);
+    public Task<string?> PromptAsync(string message, string title, string defaultValue = "") => throw new NotSupportedException();
+    public Task<string?> OpenFileDialogAsync(string title, FilePickerFileType[]? filters = null) => throw new NotSupportedException();
+    public Task ShowSettingsDialogAsync() => throw new NotSupportedException();
+    public Task ShowSdCardMenuDialogAsync() => throw new NotSupportedException();
+    public Task SetClipboardTextAsync(string text) => throw new NotSupportedException();
+    public void OpenPathWithDefaultApp(string path) => throw new NotSupportedException();
+}

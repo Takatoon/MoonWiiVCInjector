@@ -6,7 +6,7 @@ This fork aims to add per-game Nintendont configuration support to Moon WiiVC In
 
 The integration builds on **[V10lator's Nintendont autoboot forwarder](https://github.com/V10lator/nintendont-autoboot-forwarder)**, based on the original work by **[FIX94](https://github.com/FIX94/nintendont-autoboot-forwarder)**. Credit for the forwarder and its configuration loading behavior belongs to its authors.
 
-**Status:** Phase 1 forwarder integration and the Phase 2 CFG v10 serialization and embedding are implemented. PC checks pass; full injection builds and real Wii U validation remain pending. Phase 3 management is still planned.
+**Status:** Phase 1 forwarder integration and the Phase 2 shared editor, CFG v10 serialization, embedding and corrected global SD generation are implemented. PC checks pass; full injection builds and real Wii U validation remain pending. Phase 3 management is still planned.
 
 ### Phase 1 — Integrate V10lator's forwarder
 
@@ -31,7 +31,7 @@ V10lator's forwarder searches for a configuration in this order:
 
 Phase 1 uses externally prepared configuration files. It does not add an editor or embed configurations. Nintendont must still be installed at `SD:/apps/nintendont/boot.dol`.
 
-Use a correctly generated **CFG v10 (548-byte)** file for the pinned forwarder. Older 544-byte files may fail before Nintendont can migrate them. Keep a backup and regenerate or explicitly convert them with a compatible tool; do not simply pad them or change the version number. Without a readable configuration, the forwarder can fail to start. The existing global SD writer will be migrated to the corrected serializer in a subsequent change.
+Use a correctly generated **CFG v10 (548-byte)** file for the pinned forwarder. Older 544-byte files may fail before Nintendont can migrate them. Keep a backup and regenerate or explicitly convert them with a compatible tool; do not simply pad them or change the version number. Without a readable configuration, the forwarder can fail to start. The SD Card Menu now uses the same corrected configuration editor and writer as the per-injection tab.
 
 See [forwarder provenance, source, license and rebuild instructions](integrations/nintendont/README.md) for the exact revisions, checksum and validation limits.
 
@@ -42,7 +42,7 @@ The **Nintendont** tab provides an optional per-injection configuration editor, 
 - Embedding is disabled by default and unavailable when **Disable Autoboot** is selected.
 - When enabled, Moon generates CFG v10 at `files/nincfg.bin` before rebuilding the virtual ISO.
 - A game-specific configuration on SD will take precedence.
-- The injection uses the validated serializer for the pinned 548-byte, big-endian format. Sharing the editor and correcting global SD generation are the next step.
+- Both screens use one shared editor, ViewModel, validator and serializer for the pinned 548-byte, big-endian format. Global generation does not force autoboot or a game path; the embedded destination applies its required boot fields. Replacing a global file requires confirmation and creates a `.bak` backup.
 
 ### Phase 3 — Manage game-specific SD configurations
 

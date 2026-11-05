@@ -68,7 +68,7 @@ Configuration search order:
 3. `SD:/nincfg.bin`.
 
 Install Nintendont at `SD:/apps/nintendont/boot.dol`. With **Embed custom config**
-enabled in the Nintendont tab, Moon writes CFG v10 to `files/nincfg.bin`
+enabled in the Nintendont tab, Moon now writes CFG v10 to `files/nincfg.bin`
 before rebuilding the GC wrapper ISO. Otherwise supply a compatible SD
 configuration externally. No SD file is written or migrated by this feature.
 The search does not merge configurations. A successful read does not establish
@@ -82,13 +82,25 @@ The installed Nintendont loader, not this forwarder, performs any supported CFG
 migration in memory. Updating Moon does not update existing installed injects;
 rebuild and reinstall them to change their DOL.
 
-## CFG v10 model and serializer
+## CFG writer and embedding
 
-The configuration model, validator and serializer use the pinned 548-byte,
-big-endian CFG v10 format, including its PowerPC alignment padding. The editor
-maps its settings to an immutable configuration snapshot. Other CFG versions
-and malformed files are explicitly rejected rather than silently converted.
-The serializer also provides injection-specific boot-field normalization.
+The editor creates an immutable configuration snapshot before a build starts.
+The writer uses explicit big-endian offsets and two zero alignment bytes at
+530–531. It writes `GamePath="di"`, an empty cheat path, autoboot enabled, USB
+disabled, `MaxPads=0`, `GameID=0`, and `NetworkProfile=0` for an injection.
+The six memory sizes map to codes 0–5; GamePad players map to 0–3 and None to 4.
+Automatic language is `0xFFFFFFFF`. Manual width is stored as width minus 600,
+with zero for Auto. Video offset is signed. Deflicker includes both FORCE and
+FORCE_DF, and progressive coordinates Config bit 6 with VideoMode bit 4.
+
+Inactive Multi Memcard, video-type and PAL50 selections are retained in the UI
+but omitted from the generated settings. Both the per-injection tab and the
+800-pixel-wide SD Card Menu host the same `NintendontConfigView` and use separate
+instances of its shared ViewModel. The global menu serializes the same model
+without forcing autoboot or `GamePath="di"`. It confirms replacements, backs up
+the original bytes to `nincfg.bin.bak`, and writes via a temporary file in the
+destination directory before replacing the target. The v10 parser explicitly rejects
+other versions and short files; it does not silently convert imported data.
 
 Run the dependency-free checks from the repository root:
 
@@ -96,26 +108,19 @@ Run the dependency-free checks from the repository root:
 dotnet run --project integrations/nintendont/tests/SerializationTests/SerializationTests.csproj -c Release
 ```
 
-The checks cover editor mappings, validation, binary round trips and an
-independent PowerPC C fixture. `fixtures/combined-v10.bin` is generated from
-`fixtures/combined-v10.c` using the pinned compiler and upstream header.
-Extract `upstream/source.tar.gz` to `/tmp/forwarder` in the build container:
+The checks exercise all editor flag mappings, video and language selectors,
+controller slots, ranges, malformed files, production insertion into a
+temporary ISO directory, and global saving (including cancellation, backups
+and invalid settings). They require no games, keys, console or network after
+restoring the normal project dependencies. `fixtures/combined-v10.bin` is a
+548-byte independent reference generated from `fixtures/combined-v10.c` using
+the pinned PowerPC compiler and upstream header. To regenerate it, extract
+`upstream/source.tar.gz` to `/tmp/forwarder` inside the build container and run:
 
 ```sh
 powerpc-eabi-gcc -std=c11 -c combined-v10.c -I/tmp/forwarder/Nintendont/common/include -o /tmp/fixture.o
 powerpc-eabi-objcopy -O binary --only-section=.cfg_fixture /tmp/fixture.o combined-v10.bin
 ```
-
-## Embedded configuration
-
-The editor creates an immutable configuration snapshot before a build starts.
-Embedding requires a GameCube injection with autoboot enabled. Before rebuilding
-the virtual ISO, the build engine writes `files/nincfg.bin` using the serializer's
-injection-specific settings: autoboot enabled, `GamePath="di"`, an empty cheat
-path, USB disabled, and zeroed MaxPads, GameID and NetworkProfile fields.
-The production insertion checks verify the destination and preservation of both
-game disc files, and reject unsupported injection modes or missing settings.
-Full injection builds and real Wii U validation remain pending.
 
 ## Validation status
 

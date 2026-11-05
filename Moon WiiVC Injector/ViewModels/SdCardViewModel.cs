@@ -5,23 +5,12 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Moon_WiiVC_Injector.Properties;
+using Moon_WiiVC_Injector.Core.Nintendont;
 using Moon_WiiVC_Injector.Services;
 
 namespace Moon_WiiVC_Injector.ViewModels;
-
-internal sealed class OptionItem(string name, bool isChecked = false) : ObservableObject
-{
-    public string Name { get; } = name;
-
-    public bool IsChecked
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = isChecked;
-}
 
 internal sealed partial class SdCardViewModel : ViewModelBase
 {
@@ -51,47 +40,7 @@ internal sealed partial class SdCardViewModel : ViewModelBase
         set => SetProperty(ref field, value);
     } = -1;
 
-    public int MemcardBlocksIndex
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
-
-    public int VideoForceModeIndex
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
-
-    public int VideoTypeModeIndex
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
-
-    public int LanguageIndex
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
-
-    public int WiiUGamepadSlotIndex
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
-
-    public double VideoWidth
-    {
-        get;
-        set
-        {
-            if (SetProperty(ref field, value))
-            {
-                OnPropertyChanged(nameof(VideoWidthText));
-            }
-        }
-    } = 652;
+    public NintendontConfigViewModel NintendontConfig { get; } = new();
 
     public string ActionStatus
     {
@@ -99,20 +48,12 @@ internal sealed partial class SdCardViewModel : ViewModelBase
         set => SetProperty(ref field, value);
     } = string.Empty;
 
-    public ObservableCollection<OptionItem> Options { get; } = [];
-
-    // ==========================================
-    // 3. Computed Properties (Get-only)
-    // ==========================================
-    public string VideoWidthText => ((int)VideoWidth).ToString();
-
     // ==========================================
     // 4. Constructor
     // ==========================================
     public SdCardViewModel(IDialogService dialogService)
     {
         _dialogService = dialogService;
-        InitializeOptions();
         ReloadDrives();
     }
 
@@ -285,53 +226,29 @@ internal sealed partial class SdCardViewModel : ViewModelBase
 
         try
         {
-            uint configFlags = 0;
-            if (Options.Count > 0 && Options[0].IsChecked) configFlags |= 1u << 3; // NIN_CFG_MEMCARDEMU
-            if (Options.Count > 1 && Options[1].IsChecked) configFlags |= 1u;      // NIN_CFG_CHEATS
-            if (Options.Count > 9 && Options[9].IsChecked) configFlags |= 1u << 6; // FORCE_WIDE
-
-            sbyte videoScale = 0;
-            if (Options.Count > 7 && !Options[7].IsChecked)
+            // The same editor/model/writer is used for embedded and SD configs.
+            // A global config does not force autoboot or a particular game path.
+            byte[] bytes = NintendontConfigSerializer.Serialize(NintendontConfig.ToConfig());
+            if (File.Exists(savePath))
             {
-                videoScale = (sbyte)(VideoWidth - 600);
+                var overwrite = await _dialogService.ShowMessageAsync(
+                    "Replace the existing nincfg.bin? A backup will be saved as nincfg.bin.bak.",
+                    "Replace global configuration", MessageBoxButtons.YesNo);
+                if (overwrite != MessageBoxResult.Yes) return;
             }
 
-            using var cfgFile = new BinaryWriter(File.Open(savePath, FileMode.Create));
-            byte[] magicBytes = BitConverter.GetBytes(0x01070CF6u);
-            byte[] version = BitConverter.GetBytes(10u);
-            byte[] config = BitConverter.GetBytes(configFlags);
-            byte[] videoMode = BitConverter.GetBytes((uint)VideoForceModeIndex);
-            byte[] language = BitConverter.GetBytes((uint)LanguageIndex);
-            byte[] maxPads = BitConverter.GetBytes(4u);
-            byte[] gameID = BitConverter.GetBytes(0u);
-            byte[] wiiuGamepadSlot = BitConverter.GetBytes((uint)WiiUGamepadSlotIndex);
-
-            if (BitConverter.IsLittleEndian)
+            string directory = Path.GetDirectoryName(Path.GetFullPath(savePath))!;
+            string temporaryPath = Path.Combine(directory, ".nincfg-" + Guid.NewGuid().ToString("N") + ".tmp");
+            try
             {
-                Array.Reverse(magicBytes);
-                Array.Reverse(version);
-                Array.Reverse(config);
-                Array.Reverse(videoMode);
-                Array.Reverse(language);
-                Array.Reverse(maxPads);
-                Array.Reverse(gameID);
-                Array.Reverse(wiiuGamepadSlot);
+                await File.WriteAllBytesAsync(temporaryPath, bytes);
+                if (File.Exists(savePath)) File.Copy(savePath, savePath + ".bak", true);
+                File.Move(temporaryPath, savePath, overwrite: true);
             }
-
-            cfgFile.Write(magicBytes);
-            cfgFile.Write(version);
-            cfgFile.Write(config);
-            cfgFile.Write(videoMode);
-            cfgFile.Write(language);
-            cfgFile.Write(new byte[256]); // gamePath
-            cfgFile.Write(new byte[256]); // cheatPath
-            cfgFile.Write(maxPads);
-            cfgFile.Write(gameID);
-            cfgFile.Write((byte)MemcardBlocksIndex);
-            cfgFile.Write(videoScale);
-            cfgFile.Write((sbyte)0); // videoOffset
-            cfgFile.Write((byte)0);  // networkProfile
-            cfgFile.Write(wiiuGamepadSlot);
+            finally
+            {
+                if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+            }
 
             await _dialogService.ShowMessageAsync("Config generation complete.", "Information", MessageBoxButtons.Ok);
         }
@@ -344,23 +261,6 @@ internal sealed partial class SdCardViewModel : ViewModelBase
     // ==========================================
     // 6. Private Helper Methods
     // ==========================================
-    private void InitializeOptions()
-    {
-        string[] opts =
-        [
-            "Memcard Emulation", "Cheats", "Cheat Path", "Unlock Read Speed", "Wiimote CC Rumble",
-            "TRI Arcade Mode", "BBA Emulation", "Auto Video Width", "Patch PAL50", "Force Widescreen",
-            "Force Progressive", "Skip IPL", "OSReport", "Log"
-        ];
-
-        Options.Clear();
-        for (int i = 0; i < opts.Length; i++)
-        {
-            bool isChecked = (i == 0 || i == 7); // Default Memcard Emulation & Auto Video Width
-            Options.Add(new OptionItem(opts[i], isChecked));
-        }
-    }
-
     private string? GetSelectedDriveLetter()
     {
         if (string.IsNullOrWhiteSpace(SelectedDrive)) return null;
