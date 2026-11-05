@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -59,6 +60,25 @@ internal sealed class AvaloniaDialogService(Func<Window?> getActiveWindow) : IDi
         });
 
         return (result != null && result.Count > 0) ? result[0].Path.LocalPath : null;
+    }
+
+    public async Task<string?> SaveFileDialogAsync(string title, string fileName, string? initialDirectory = null)
+    {
+        var storage = GetRequiredWindow().StorageProvider;
+        IStorageFolder? folder = null;
+        if (!string.IsNullOrWhiteSpace(initialDirectory) && Directory.Exists(initialDirectory))
+            folder = await storage.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(initialDirectory)));
+
+        var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = fileName,
+            SuggestedStartLocation = folder,
+            DefaultExtension = "bin",
+            FileTypeChoices = [new FilePickerFileType("Nintendont configuration") { Patterns = ["*.bin"] }],
+            ShowOverwritePrompt = true,
+        });
+        return file?.TryGetLocalPath();
     }
 
     public async Task ShowSettingsDialogAsync()

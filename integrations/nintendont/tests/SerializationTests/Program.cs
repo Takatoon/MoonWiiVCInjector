@@ -20,6 +20,10 @@ void Reject(Action action, string name)
 }
 uint Read(byte[] bytes, int offset) => BinaryPrimitives.ReadUInt32BigEndian(bytes.AsSpan(offset, 4));
 
+Check(MainViewModel.GetNintendontConfigFileName("GMSE") == "GMSE.bin", "export filename uses the disc ID prefix");
+foreach (string id in new[] { "", "GMS", "GMSE01", "../x", "GMS/", "gmse", "GM\0E" })
+    Check(MainViewModel.GetNintendontConfigFileName(id) is null, "invalid export ID rejected");
+
 var ui = new NintendontConfigViewModel();
 byte[] defaults = NintendontConfigSerializer.SerializeForInjection(ui.ToConfig());
 Check(defaults.Length == 548 && Read(defaults, 0) == 0x01070CF6 && Read(defaults, 4) == 10, "v10 header and size");
@@ -211,6 +215,7 @@ internal sealed class TestDialogs : IDialogService
             buttons == MessageBoxButtons.YesNo ? MessageBoxResult.Yes : MessageBoxResult.Ok);
     }
     public Task<string?> OpenFolderDialogAsync(string title) => Task.FromResult(Folder);
+    public Task<string?> SaveFileDialogAsync(string title, string fileName, string? initialDirectory = null) => throw new NotSupportedException();
     public Task<string?> PromptAsync(string message, string title, string defaultValue = "") => throw new NotSupportedException();
     public Task<string?> OpenFileDialogAsync(string title, FilePickerFileType[]? filters = null) => throw new NotSupportedException();
     public Task ShowSettingsDialogAsync() => throw new NotSupportedException();

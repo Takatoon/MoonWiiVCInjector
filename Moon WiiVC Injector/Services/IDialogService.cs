@@ -9,6 +9,7 @@ internal interface IDialogService
     Task<string?> PromptAsync(string message, string title, string defaultValue = "");
     Task<string?> OpenFileDialogAsync(string title, FilePickerFileType[]? filters = null);
     Task<string?> OpenFolderDialogAsync(string title);
+    Task<string?> SaveFileDialogAsync(string title, string fileName, string? initialDirectory = null);
     Task ShowSettingsDialogAsync();
     Task ShowSdCardMenuDialogAsync();
     Task SetClipboardTextAsync(string text);

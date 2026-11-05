@@ -181,6 +181,9 @@
                 <views:NintendontConfigView DataContext="{Binding NintendontConfig}"/>
               </Grid>
             </Grid>
+            <Border Background="Transparent" HorizontalAlignment="Right" ToolTip.Tip="{Binding NintendontExportTooltip}">
+              <Button Content="Export config…" Command="{Binding ExportNintendontConfigCommand}"/>
+            </Border>
           </StackPanel>
         </ScrollViewer>
       </TabItem>

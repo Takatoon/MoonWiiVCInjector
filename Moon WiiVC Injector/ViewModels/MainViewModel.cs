@@ -296,16 +296,63 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
     public bool DisableNintendontAutoboot
     {
         get;
-        set => SetProperty(ref field, value);
+        set { if (SetProperty(ref field, value)) NotifyNintendontExportChanged(); }
     }
 
     public bool EmbedNintendontConfig
     {
         get;
-        set => SetProperty(ref field, value);
+        set { if (SetProperty(ref field, value)) NotifyNintendontExportChanged(); }
     }
 
     public NintendontConfigViewModel NintendontConfig { get; } = new();
+
+    private string _nintendontGameId = string.Empty;
+    public bool CanExportNintendontConfig => _systemType == "gcn" && !IsBuilding &&
+        EmbedNintendontConfig && !DisableNintendontAutoboot && GetNintendontConfigFileName(_nintendontGameId) is not null;
+    public string NintendontExportTooltip => GetNintendontConfigFileName(_nintendontGameId) is { } name
+        ? $"Save a per-game config for SD:/nintendont/configs/{name}."
+        : "Select a GameCube disc image to export its per-game configuration.";
+
+    internal static string? GetNintendontConfigFileName(string gameId) =>
+        gameId.Length == 4 && gameId.All(c => c is >= 'A' and <= 'Z' or >= '0' and <= '9')
+            ? gameId + ".bin" : null;
+
+    private void NotifyNintendontExportChanged()
+    {
+        OnPropertyChanged(nameof(CanExportNintendontConfig));
+        OnPropertyChanged(nameof(NintendontExportTooltip));
+        ExportNintendontConfigCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanExportNintendontConfig))]
+    public async Task ExportNintendontConfigAsync()
+    {
+        if (!CanExportNintendontConfig) return;
+        try
+        {
+            byte[] bytes = NintendontConfigSerializer.SerializeForInjection(NintendontConfig.ToConfig());
+            string? path = await _dialogService.SaveFileDialogAsync("Export Nintendont configuration",
+                GetNintendontConfigFileName(_nintendontGameId)!, Settings.Default.OutputPathFixed);
+            if (string.IsNullOrEmpty(path)) return;
+
+            string directory = Path.GetDirectoryName(Path.GetFullPath(path))!;
+            string temporaryPath = Path.Combine(directory, ".nincfg-" + Guid.NewGuid().ToString("N") + ".tmp");
+            try
+            {
+                await File.WriteAllBytesAsync(temporaryPath, bytes);
+                File.Move(temporaryPath, path, overwrite: true);
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            await _dialogService.ShowMessageAsync($"Failed to export Nintendont configuration: {ex.Message}", "Error");
+        }
+    }
 
     public bool C2WPatchFlag
     {
@@ -482,7 +529,7 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
     public bool IsBuilding
     {
         get;
-        set => SetProperty(ref field, value);
+        set { if (SetProperty(ref field, value)) NotifyNintendontExportChanged(); }
     }
 
     public bool CanCancel
@@ -797,6 +844,8 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
 
     private void ResetGameSelection()
     {
+        _nintendontGameId = string.Empty;
+        NotifyNintendontExportChanged();
         _flagGameSpecified = false;
         _selectedGamePath = string.Empty;
         _titleIdInt = 0;
@@ -901,6 +950,8 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
 
     private async Task LoadGameFromFileAsync(string gamePath)
     {
+        _nintendontGameId = string.Empty;
+        NotifyNintendontExportChanged();
         _selectedGamePath = gamePath;
         CleanUpImages();
 
@@ -995,6 +1046,11 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
             else
             {
                 _titleIdText = Encoding.ASCII.GetString(Convert.FromHexString(_titleIdHex));
+                if (_systemType == "gcn")
+                {
+                    _nintendontGameId = _titleIdText;
+                    NotifyNintendontExportChanged();
+                }
                 InternalGameIDDisplay = $"{_titleIdText} / {_titleIdHex}";
                 PackedTitleIDLine = $"00050002{_titleIdHex}";
             }

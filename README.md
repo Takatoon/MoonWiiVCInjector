@@ -42,6 +42,7 @@ The **Nintendont** tab provides an optional per-injection configuration editor, 
 - Embedding is disabled by default and unavailable when **Disable Autoboot** is selected.
 - When enabled, Moon generates CFG v10 at `files/nincfg.bin` before rebuilding the virtual ISO.
 - A game-specific configuration on SD will take precedence.
+- **Export config…** saves the current settings as `XXXX.bin`, using the selected GameCube disc's four-character ID. The save dialog starts in **Output Directory** when configured; copy the exported file to `SD:/nintendont/configs/` to use it as a per-game override.
 - Both screens use one shared editor, ViewModel, validator and serializer for the pinned 548-byte, big-endian format. Global generation does not force autoboot or a game path; the embedded destination applies its required boot fields. Replacing a global file requires confirmation and creates a `.bak` backup.
 
 ### Phase 3 — Manage game-specific SD configurations
