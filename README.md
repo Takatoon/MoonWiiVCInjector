@@ -6,7 +6,7 @@ This fork aims to add per-game Nintendont configuration support to Moon WiiVC In
 
 The integration builds on **[V10lator's Nintendont autoboot forwarder](https://github.com/V10lator/nintendont-autoboot-forwarder)**, based on the original work by **[FIX94](https://github.com/FIX94/nintendont-autoboot-forwarder)**. Credit for the forwarder and its configuration loading behavior belongs to its authors.
 
-**Status:** Phase 1 forwarder integration and the Phase 2 shared editor, CFG v10 serialization, embedding and corrected global SD generation are implemented. PC checks pass; full injection builds and real Wii U validation remain pending. Phase 3 management is still planned.
+**Status:** Phase 1 forwarder integration and Phase 2 configuration editing, CFG v10 serialization, embedding and per-game export are implemented. PC checks pass; full injection builds and real Wii U validation remain pending. Phases 3 and 4 are planned.
 
 ### Phase 1 — Integrate V10lator's forwarder
 
@@ -45,11 +45,39 @@ The **Nintendont** tab provides an optional per-injection configuration editor, 
 - **Export config…** saves the current settings as `XXXX.bin`, using the selected GameCube disc's four-character ID. The save dialog starts in **Output Directory** when configured; copy the exported file to `SD:/nintendont/configs/` to use it as a per-game override.
 - Both screens use one shared editor, ViewModel, validator and serializer for the pinned 548-byte, big-endian format. Global generation does not force autoboot or a game path; the embedded destination applies its required boot fields. Replacing a global file requires confirmation and creates a `.bak` backup.
 
-### Phase 3 — Manage game-specific SD configurations
+### Phase 3 — Manage configurations on SD
 
-Extend the **Nintendont SD Card Menu** to create, import, edit and export `XXXX.bin` files.
+Extend the **Nintendont SD Card Menu** to manage both global and
+per-game configurations directly on an SD card.
 
-This phase will reuse the editor and serializer from Phase 2, with explicit handling of incompatible versions, overwrite confirmation and backups.
+- Select between global configuration (`SD:/nincfg.bin`) and per-game
+  configurations (`SD:/nintendont/configs/XXXX.bin`).
+- Create, load, import, edit, export and delete configurations.
+- Show game names and regions when a matching database entry is
+  available, retaining the filename for unidentified games.
+- Reuse the editor, validator and serializer from Phase 2.
+- Handle incompatible configuration versions explicitly, confirm
+  overwrites and deletions, and preserve backups.
+
+The existing Nintendont download/update action will remain available.
+File access will be separated from configuration management so the
+same workflow can support FTP in Phase 4.
+
+### Phase 4 — Manage the console SD card over FTP
+
+Add FTP as an alternative connection method in the same menu.
+
+- Connect using the console IP, with advanced options for the port
+  and transfer mode.
+- Automatically detect the SD card root exposed by the FTP server.
+- Manage global and per-game configurations using the same editor
+  and operations available for a locally connected SD card.
+- Download and update Nintendont on the console SD card.
+- Remember connection settings locally for future sessions.
+
+The initial scope targets anonymous connections provided by FTPiiU
+and the Aroma FTPiiU plugin. No username or password fields are planned.
+Local SD access will remain available without an FTP connection.
 
 ### Compatibility and validation
 
