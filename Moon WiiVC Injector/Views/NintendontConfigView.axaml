@@ -125,7 +125,7 @@
       <StackPanel Spacing="8">
         <TextBlock Text="Cheats &amp; Network" FontWeight="SemiBold"/>
         <CheckBox Content="Enable Cheats" IsChecked="{Binding Cheats}" ToolTip.Tip="Load cheat codes from a compatible .gct file on the SD card. The file must be provided separately; Moon does not include it in the injection."/>
-        <CheckBox Content="BBA Emulation" IsChecked="{Binding BbaEmulation}" ToolTip.Tip="Emulate the GameCube Broadband Adapter for network features in supported games. Uses the Wii U's network connection."/>
+        <CheckBox Content="BBA Emulation" IsChecked="{Binding BbaEmulation}" ToolTip.Tip="Emulate the GameCube Broadband Adapter using the Wii U's network connection. Only supported games can use its network features."/>
       </StackPanel>
     </Border>
     <Border Grid.Row="2" Grid.ColumnSpan="2" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
