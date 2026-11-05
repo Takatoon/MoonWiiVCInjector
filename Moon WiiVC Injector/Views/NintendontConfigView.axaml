@@ -80,7 +80,7 @@
     <Border Grid.Row="0" Grid.Column="1" Margin="6,0,0,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
         <TextBlock Text="Video" FontWeight="SemiBold"/>
-        <Grid Background="Transparent" ToolTip.Tip="Choose automatic video selection, force the selected Video Type, force it with a deflicker filter, or leave video mode unforced." ColumnDefinitions="*,170">
+        <Grid Background="Transparent" ToolTip.Tip="Choose automatic video selection, force Video Type with or without a deflicker filter, or select None to leave the video mode unforced. None still allows Force Progressive, Video Width and Video Offset patches." ColumnDefinitions="*,170">
           <TextBlock Text="Video Mode" VerticalAlignment="Center"/>
           <ComboBox Grid.Column="1" SelectedIndex="{Binding VideoModeIndex}" HorizontalAlignment="Stretch">
             <ComboBoxItem Content="Auto"/>
