@@ -118,7 +118,7 @@
         <TextBlock Text="Compatibility" FontWeight="SemiBold"/>
         <CheckBox Content="Unlock Read Speed" IsChecked="{Binding UnlockReadSpeed}" ToolTip.Tip="May affect game compatibility."/>
         <CheckBox Content="Skip IPL" IsChecked="{Binding SkipIpl}" ToolTip.Tip="Boot directly into the game instead of loading an available GameCube IPL or Triforce boot ROM. May affect boot compatibility."/>
-        <CheckBox Content="TRI Arcade Mode" IsChecked="{Binding TriArcadeMode}" ToolTip.Tip="Enable arcade behavior for supported Triforce games. Has no effect on regular GameCube games."/>
+        <CheckBox Content="TRI Arcade Mode" IsChecked="{Binding TriArcadeMode}" ToolTip.Tip="Enable arcade behavior in supported Triforce games. Also used for special patches on the Datel Advance Game Port disc."/>
       </StackPanel>
     </Border>
     <Border Grid.Row="1" Grid.Column="1" Margin="6,0,0,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
