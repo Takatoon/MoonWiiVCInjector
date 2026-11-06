@@ -150,5 +150,8 @@ forwarder after regenerating the Wii U menu metadata and updating the
 Nintendont loader on SD. A per-game configuration on SD took precedence over
 the embedded video settings.
 
-An isolated global fallback test, manual startup with **Disable Autoboot**,
-disc swapping and return to the Wii U menu still need hardware coverage.
+Returning to the Wii U Menu was confirmed during testing. The remaining
+hardware checks are disc swapping, launching an injection with
+**Disable Autoboot** selected to verify that it opens the Nintendont menu,
+and booting with only `SD:/nincfg.bin` available. For that last check, use
+an injection without an embedded config and remove the per-game SD override.

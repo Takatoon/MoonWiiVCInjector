@@ -86,7 +86,7 @@ The integration pins the forwarder revision and documents its build, configurati
 - **Phase 1.** A standalone Phase 1 injection reached gameplay on a Wii U with V10lator's forwarder after the older Nintendont configuration was replaced with a compatible CFG v10 file.
 - **Phase 2.** A GameCube WUP with an embedded CFG v10 launched after its Wii U menu metadata was regenerated and the Nintendont loader on SD was updated. A per-game configuration on SD took precedence over the embedded video settings.
 
-An isolated test of global configuration fallback, manual startup with **Disable Autoboot**, disc swapping and return to the Wii U menu still need hardware coverage.
+Returning to the Wii U Menu was confirmed during testing. The remaining hardware checks are disc swapping, launching an injection with **Disable Autoboot** selected to verify that it opens the Nintendont menu, and booting with `SD:/nincfg.bin` as the only configuration source.
 
 Rebuild and reinstall existing injections to use the new forwarder or regenerate their Wii U metadata.
 
