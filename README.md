@@ -6,7 +6,7 @@ This fork aims to add per-game Nintendont configuration support to Moon WiiVC In
 
 The integration builds on **[V10lator's Nintendont autoboot forwarder](https://github.com/V10lator/nintendont-autoboot-forwarder)**, based on the original work by **[FIX94](https://github.com/FIX94/nintendont-autoboot-forwarder)**. Credit for the forwarder and its configuration loading behavior belongs to its authors.
 
-**Status:** Phase 1 forwarder integration is implemented and passes the PC checks documented below. Full injection builds and real Wii U validation remain pending. Phases 2, 3 and 4 are planned for this branch.
+**Status:** Phase 1 is implemented. Its default forwarder booted on a real Wii U as part of a Phase 2 test injection. Phases 2, 3 and 4 are planned for this branch.
 
 ### Phase 1 — Integrate V10lator's forwarder
 
@@ -82,7 +82,9 @@ Local SD access will remain available without an FTP connection.
 
 The integration pins the forwarder revision and documents its build, configuration format and binary checksum. The initial reference is CFG v10; older files must not be assumed compatible.
 
-Each phase will distinguish automated checks from tests performed on real Wii U hardware. Existing installed injections will require rebuilding to use the new forwarder.
+**Wii U test:** A *Luigi’s Mansion* (PAL, `GLMP01`) WUP built during Phase 2 booted with the same V10lator forwarder used by this branch. The test used rebuilt Wii U `meta.xml` metadata and an updated Nintendont loader on SD. The standalone Phase 1 build, global fallback and the non-autoboot path still need hardware testing.
+
+Rebuild and reinstall existing injections to use the new forwarder or regenerate their Wii U metadata.
 
 Changes to Wii Retail, Wii Homebrew and vWii NAND injection behavior, and unrelated GamePad patches, are outside this work.
 
