@@ -14,6 +14,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Moon_WiiVC_Injector.Models;
+using Moon_WiiVC_Injector.Core.Nintendont;
 using Moon_WiiVC_Injector.Properties;
 using Moon_WiiVC_Injector.Services;
 
@@ -292,10 +293,58 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
         set => SetProperty(ref field, value);
     }
 
-    public bool DisableNintendontAutoboot
+    public NintendontConfigViewModel NintendontConfig { get; }
+
+    private const string NintendontSdConfigDirectory = "SD:/nintendont/configs";
+    private string _nintendontGameId = string.Empty;
+    public bool CanExportNintendontConfig => _systemType == "gcn" && !IsBuilding &&
+        GetNintendontConfigFileName(_nintendontGameId) is not null;
+    public string NintendontExportTooltip => GetNintendontConfigFileName(_nintendontGameId) is { } name
+        ? $"Save a per-game config for {NintendontSdConfigDirectory}/{name}."
+        : "Select a GameCube disc image to export its per-game configuration.";
+
+    internal static string? GetNintendontConfigFileName(string gameId) =>
+        gameId.Length == 4 && gameId.All(c => c is >= 'A' and <= 'Z' or >= '0' and <= '9')
+            ? gameId + ".bin" : null;
+
+    private void NotifyNintendontExportChanged()
     {
-        get;
-        set => SetProperty(ref field, value);
+        OnPropertyChanged(nameof(CanExportNintendontConfig));
+        OnPropertyChanged(nameof(NintendontExportTooltip));
+        ExportNintendontConfigCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanExportNintendontConfig))]
+    public async Task ExportNintendontConfigAsync()
+    {
+        if (!CanExportNintendontConfig) return;
+        try
+        {
+            byte[] bytes = NintendontConfigSerializer.SerializeForInjection(NintendontConfig.ToConfig());
+            const string dialogTitle = "Export Nintendont configuration";
+            string fileName = GetNintendontConfigFileName(_nintendontGameId)!;
+            await _dialogService.ShowMessageAsync(
+                $"Copy the exported file to this location on your SD card.\n\n{NintendontSdConfigDirectory}/{fileName}\n\nThe SD configuration takes priority over the configuration embedded in the injection.",
+                dialogTitle);
+            string? path = await _dialogService.SaveFileDialogAsync(dialogTitle, fileName, Settings.Default.OutputPathFixed);
+            if (string.IsNullOrEmpty(path)) return;
+
+            string directory = Path.GetDirectoryName(Path.GetFullPath(path))!;
+            string temporaryPath = Path.Combine(directory, ".nincfg-" + Guid.NewGuid().ToString("N") + ".tmp");
+            try
+            {
+                await File.WriteAllBytesAsync(temporaryPath, bytes);
+                File.Move(temporaryPath, path, overwrite: true);
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            await _dialogService.ShowMessageAsync($"Failed to export Nintendont configuration: {ex.Message}", "Error");
+        }
     }
 
     public bool C2WPatchFlag
@@ -473,7 +522,7 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
     public bool IsBuilding
     {
         get;
-        set => SetProperty(ref field, value);
+        set { if (SetProperty(ref field, value)) NotifyNintendontExportChanged(); }
     }
 
     public bool CanCancel
@@ -546,6 +595,7 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
     public MainViewModel(IDialogService dialogService)
     {
         _dialogService = dialogService;
+        NintendontConfig = new(dialogService, isInjectionEditor: true);
         AppLogger.SetListener(AppendLogMessage);
         AppLogger.Info("Moon WiiVC Injector initialized.");
         _setupTask = SetupEnvironmentAsync();
@@ -788,6 +838,8 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
 
     private void ResetGameSelection()
     {
+        _nintendontGameId = string.Empty;
+        NotifyNintendontExportChanged();
         _flagGameSpecified = false;
         _selectedGamePath = string.Empty;
         _titleIdInt = 0;
@@ -892,6 +944,8 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
 
     private async Task LoadGameFromFileAsync(string gamePath)
     {
+        _nintendontGameId = string.Empty;
+        NotifyNintendontExportChanged();
         _selectedGamePath = gamePath;
         CleanUpImages();
 
@@ -986,6 +1040,11 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
             else
             {
                 _titleIdText = Encoding.ASCII.GetString(Convert.FromHexString(_titleIdHex));
+                if (_systemType == "gcn")
+                {
+                    _nintendontGameId = _titleIdText;
+                    NotifyNintendontExportChanged();
+                }
                 InternalGameIDDisplay = $"{_titleIdText} / {_titleIdHex}";
                 PackedTitleIDLine = $"00050002{_titleIdHex}";
             }
@@ -1579,6 +1638,19 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     public async Task BuildAsync()
     {
+        bool disableNintendontAutoboot = _systemType == "gcn" && NintendontConfig.DisableAutoboot;
+        bool embedNintendontConfig = _systemType == "gcn" && !disableNintendontAutoboot && NintendontConfig.EmbedCustomConfig;
+        NintendontConfig? nintendontConfig = null;
+        if (embedNintendontConfig)
+        {
+            try { nintendontConfig = NintendontConfig.ToConfig(); }
+            catch (ArgumentException ex)
+            {
+                await _dialogService.ShowMessageAsync(ex.Message, "Invalid Nintendont configuration");
+                return;
+            }
+        }
+
         IsBuilding = true;
         CanCancel = true;
         BuildProgress = 0;
@@ -1688,7 +1760,9 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
             Wiimmfi = Wiimmfi,
             WiiVMC = WiiVMC,
             DisableTrimming = DisableTrimming,
-            DisableNintendontAutoboot = DisableNintendontAutoboot,
+            DisableNintendontAutoboot = disableNintendontAutoboot,
+            EmbedNintendontConfig = embedNintendontConfig,
+            NintendontConfig = nintendontConfig,
             C2WPatch = C2WPatchFlag,
             LRPatch = LrPatch,
             SoundDir = BootSoundText,

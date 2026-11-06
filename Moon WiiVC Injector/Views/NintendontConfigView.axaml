@@ -1,0 +1,173 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Moon_WiiVC_Injector.ViewModels"
+             x:Class="Moon_WiiVC_Injector.NintendontConfigView"
+             x:DataType="vm:NintendontConfigViewModel">
+  <UserControl.Styles>
+    <Style Selector="NumericUpDown.nintendont-number">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackground}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxForeground}"/>
+    </Style>
+    <Style Selector="NumericUpDown.nintendont-number:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundPointerOver}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrushPointerOver}"/>
+    </Style>
+    <Style Selector="NumericUpDown.nintendont-number:focus-within">
+      <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushFocused}"/>
+    </Style>
+    <Style Selector="NumericUpDown.nintendont-number:disabled">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundDisabled}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrushDisabled}"/>
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxForegroundDisabled}"/>
+    </Style>
+    <Style Selector="NumericUpDown.nintendont-number /template/ TextBox#PART_TextBox /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="Border.diagnostics">
+      <Setter Property="Grid.ColumnSpan" Value="2"/>
+    </Style>
+    <Style Selector="Border.diagnostics.injection">
+      <Setter Property="Grid.Column" Value="1"/>
+      <Setter Property="Grid.ColumnSpan" Value="1"/>
+      <Setter Property="Margin" Value="6,0,0,0"/>
+    </Style>
+  </UserControl.Styles>
+
+  <StackPanel Spacing="12">
+    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+      <CheckBox Content="Embed custom config" IsVisible="{Binding IsInjectionEditor}"
+                IsChecked="{Binding EmbedCustomConfig}" IsEnabled="{Binding !DisableAutoboot}"
+                ToolTip.Tip="Include these settings in the injection. An SD game-specific config (XXXX.bin) takes precedence."/>
+      <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsAdvanced, Mode=OneWay}"
+                    IsCheckedChanged="OnAdvancedConfigurationChanged"
+                    OnContent="Advanced configuration" OffContent="Advanced configuration"
+                    AutomationProperties.Name="Advanced configuration"/>
+    </Grid>
+    <StackPanel Spacing="8" IsVisible="{Binding !IsAdvanced}">
+      <CheckBox Content="Force Widescreen" IsChecked="{Binding SimpleWidescreen}"
+                ToolTip.Tip="Patch game rendering for widescreen and set Wii U output to 16:9."/>
+      <CheckBox Content="Force Progressive" IsChecked="{Binding ForceProgressive}"
+                ToolTip.Tip="Patch supported video modes to 480p. May cause a black screen in incompatible games."/>
+    </StackPanel>
+    <Grid IsVisible="{Binding IsAdvanced}" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
+      <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,*" Margin="0,0,6,12">
+        <Border Grid.Row="0" Margin="0,0,0,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Memory Card" FontWeight="SemiBold"/>
+            <CheckBox Content="Memcard Emulation" IsChecked="{Binding MemcardEmulation}" ToolTip.Tip="Use a virtual GameCube memory card. Triforce arcade card saves are handled separately and are unaffected by this setting."/>
+            <StackPanel Spacing="8" IsEnabled="{Binding MemcardEmulation}">
+              <Grid Background="Transparent" ToolTip.Tip="Capacity of the virtual memory card in save blocks. Larger than 251 may cause compatibility issues. Does not resize existing cards." ColumnDefinitions="*,170">
+                <TextBlock Text="Memcard Blocks" VerticalAlignment="Center"/>
+                <ComboBox Grid.Column="1" SelectedIndex="{Binding MemcardBlocksIndex}" HorizontalAlignment="Stretch">
+                  <ComboBoxItem Content="59"/>
+                  <ComboBoxItem Content="123"/>
+                  <ComboBoxItem Content="251"/>
+                  <ComboBoxItem Content="507 (Unstable)"/>
+                  <ComboBoxItem Content="1019 (Unstable)"/>
+                  <ComboBoxItem Content="2043 (Unstable)"/>
+                </ComboBox>
+              </Grid>
+              <CheckBox Content="Multi Memcard" IsChecked="{Binding MultiMemcard}" ToolTip.Tip="Share a card between games, separated by Japan and USA/PAL. Off uses one card per game."/>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+        <Border Grid.Row="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Controllers &amp; Language" FontWeight="SemiBold"/>
+            <Grid Background="Transparent" ToolTip.Tip="Assign the Wii U GamePad to player 1–4. Select None to disable it as a GameCube controller." ColumnDefinitions="*,170">
+              <TextBlock Text="GamePad Slot" VerticalAlignment="Center"/>
+              <ComboBox Grid.Column="1" SelectedIndex="{Binding GamepadSlotIndex}" HorizontalAlignment="Stretch">
+                <ComboBoxItem Content="Player 1"/>
+                <ComboBoxItem Content="Player 2"/>
+                <ComboBoxItem Content="Player 3"/>
+                <ComboBoxItem Content="Player 4"/>
+                <ComboBoxItem Content="None"/>
+              </ComboBox>
+            </Grid>
+            <CheckBox Content="Wiimote CC Rumble" IsChecked="{Binding CcRumble}" ToolTip.Tip="Enable rumble on the Wii Remote when using a connected Classic Controller. The Classic Controller itself does not vibrate."/>
+            <Grid Background="Transparent" ToolTip.Tip="Select the language reported to the game. The game must support the selected language; this does not translate it." ColumnDefinitions="*,170">
+              <TextBlock Text="Language" VerticalAlignment="Center"/>
+              <ComboBox Grid.Column="1" SelectedIndex="{Binding LanguageIndex}" HorizontalAlignment="Stretch">
+                <ComboBoxItem Content="Automatic"/>
+                <ComboBoxItem Content="English"/>
+                <ComboBoxItem Content="German"/>
+                <ComboBoxItem Content="French"/>
+                <ComboBoxItem Content="Spanish"/>
+                <ComboBoxItem Content="Italian"/>
+                <ComboBoxItem Content="Dutch"/>
+              </ComboBox>
+            </Grid>
+          </StackPanel>
+        </Border>
+      </Grid>
+      <Border Grid.Row="0" Grid.Column="1" Margin="6,0,0,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Video" FontWeight="SemiBold"/>
+          <Grid Background="Transparent" ToolTip.Tip="Choose automatic video selection, force Video Type with or without a deflicker filter, or select None to leave the video mode unforced. None still allows Force Progressive, Video Width and Video Offset patches." ColumnDefinitions="*,170">
+            <TextBlock Text="Video Mode" VerticalAlignment="Center"/>
+            <ComboBox Grid.Column="1" SelectedIndex="{Binding VideoModeIndex}" HorizontalAlignment="Stretch">
+              <ComboBoxItem Content="Auto"/>
+              <ComboBoxItem Content="Force"/>
+              <ComboBoxItem Content="Force (Deflicker)"/>
+              <ComboBoxItem Content="None"/>
+            </ComboBox>
+          </Grid>
+          <Grid Background="Transparent" ToolTip.Tip="Output video format to request in Force or Force (Deflicker) mode." ColumnDefinitions="*,170" IsEnabled="{Binding CanSelectVideoType}">
+            <TextBlock Text="Video Type" VerticalAlignment="Center"/>
+            <ComboBox Grid.Column="1" SelectedIndex="{Binding VideoTypeIndex}" HorizontalAlignment="Stretch">
+              <ComboBoxItem Content="NTSC"/>
+              <ComboBoxItem Content="MPAL"/>
+              <ComboBoxItem Content="PAL50"/>
+              <ComboBoxItem Content="PAL60"/>
+            </ComboBox>
+          </Grid>
+          <CheckBox Content="Auto Video Width" IsChecked="{Binding AutoVideoWidth}" ToolTip.Tip="Let Nintendont choose the output image width. Disable to set Video Width manually."/>
+          <Grid Background="Transparent" ToolTip.Tip="Adjust the horizontal output image width. Does not change height or internal rendering resolution." ColumnDefinitions="*,170" IsEnabled="{Binding !AutoVideoWidth}">
+            <TextBlock Text="Video Width" VerticalAlignment="Center"/>
+            <NumericUpDown Classes="nintendont-number" Grid.Column="1" Value="{Binding VideoWidth}" Minimum="640" Maximum="720" Increment="2" FormatString="0"/>
+          </Grid>
+          <Grid Background="Transparent" ToolTip.Tip="Shift the output image horizontally. Does not change its size." ColumnDefinitions="*,170">
+            <TextBlock Text="Video Offset" VerticalAlignment="Center"/>
+            <NumericUpDown Classes="nintendont-number" Grid.Column="1" Value="{Binding VideoOffset}" Minimum="-20" Maximum="20" Increment="1" FormatString="0"/>
+          </Grid>
+          <CheckBox Content="Wii U Widescreen" IsChecked="{Binding WiiUWidescreen}" ToolTip.Tip="Set Wii U output to 16:9 instead of 4:3. Games still rendering in 4:3 will appear stretched."/>
+          <CheckBox Content="Force Widescreen" IsChecked="{Binding ForceWidescreen}" ToolTip.Tip="Patches game rendering; may cause visual issues or crashes."/>
+          <CheckBox Content="Force Progressive" IsChecked="{Binding ForceProgressive}" ToolTip.Tip="Patch supported video modes to 480p. Takes priority over Video Type when converting video modes. May cause a black screen in incompatible games."/>
+          <CheckBox Content="Patch PAL50" IsChecked="{Binding PatchPal50}" IsEnabled="{Binding CanPatchPal50}" ToolTip.Tip="Allow PAL50 video modes to be converted to 480p with Force Progressive, or to NTSC/MPAL when that Video Type is forced. Has no effect when forcing PAL50/PAL60 without Force Progressive. May cause compatibility issues."/>
+        </StackPanel>
+      </Border>
+      <Border Grid.Row="1" Grid.Column="0" Margin="0,0,6,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Compatibility" FontWeight="SemiBold"/>
+          <CheckBox Content="Unlock Read Speed" IsChecked="{Binding UnlockReadSpeed}" ToolTip.Tip="May affect game compatibility."/>
+          <CheckBox Content="Skip IPL" IsChecked="{Binding SkipIpl}" ToolTip.Tip="Boot directly into the game instead of loading an available GameCube IPL or Triforce boot ROM. May affect boot compatibility."/>
+          <CheckBox Content="TRI Arcade Mode" IsChecked="{Binding TriArcadeMode}" ToolTip.Tip="Enable arcade behavior in supported Triforce games. Also used for special patches on the Datel Advance Game Port disc."/>
+        </StackPanel>
+      </Border>
+      <Border Grid.Row="1" Grid.Column="1" Margin="6,0,0,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Cheats &amp; Network" FontWeight="SemiBold"/>
+          <CheckBox Content="Enable Cheats" IsChecked="{Binding Cheats}" ToolTip.Tip="Load cheat codes from a compatible .gct file on the SD card. The file must be provided separately; Moon does not include it in the injection."/>
+          <CheckBox Content="BBA Emulation" IsChecked="{Binding BbaEmulation}" ToolTip.Tip="Emulate the GameCube Broadband Adapter using the Wii U's network connection. Only supported games can use its network features."/>
+        </StackPanel>
+      </Border>
+      <Border Grid.Row="2" IsVisible="{Binding IsInjectionEditor}" Margin="0,0,6,0"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Startup" FontWeight="SemiBold"/>
+          <CheckBox Content="Disable Autoboot" IsChecked="{Binding DisableAutoboot}"
+                    ToolTip.Tip="Open the Nintendont menu. Select Boot included GC Disc to launch the injected game."/>
+        </StackPanel>
+      </Border>
+      <Border Grid.Row="2" Classes="diagnostics" Classes.injection="{Binding IsInjectionEditor}"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" RowSpacing="8">
+          <TextBlock Grid.ColumnSpan="2" Text="Diagnostics" FontWeight="SemiBold"/>
+          <CheckBox Grid.Row="1" Grid.Column="0" Content="OSReport" IsChecked="{Binding OsReport}" ToolTip.Tip="Enable diagnostic messages emitted by the game. Intended for troubleshooting."/>
+          <CheckBox Grid.Row="1" Grid.Column="1" Content="Log" IsChecked="{Binding Log}" ToolTip.Tip="Write Nintendont diagnostic messages to ndebug.log on the storage device. Intended for troubleshooting."/>
+        </Grid>
+      </Border>
+    </Grid>
+  </StackPanel>
+</UserControl>

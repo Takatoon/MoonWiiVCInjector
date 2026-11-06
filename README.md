@@ -6,7 +6,7 @@ This fork aims to add per-game Nintendont configuration support to Moon WiiVC In
 
 The integration builds on **[V10lator's Nintendont autoboot forwarder](https://github.com/V10lator/nintendont-autoboot-forwarder)**, based on the original work by **[FIX94](https://github.com/FIX94/nintendont-autoboot-forwarder)**. Credit for the forwarder and its configuration loading behavior belongs to its authors.
 
-**Status:** Phase 1 is implemented. Its default forwarder booted on a real Wii U as part of a Phase 2 test injection. Phases 2, 3 and 4 are planned for this branch.
+**Status.** Phases 1 and 2 are complete. The default Phase 1 forwarder and the Phase 2 embedded configuration workflow were tested on a Wii U. Phases 3 and 4 are planned.
 
 ### Phase 1 — Integrate V10lator's forwarder
 
@@ -31,18 +31,19 @@ V10lator's forwarder searches for a configuration in this order:
 
 Phase 1 uses externally prepared configuration files. It does not add an editor or embed configurations. Nintendont must still be installed at `SD:/apps/nintendont/boot.dol`.
 
-Use a correctly generated **CFG v10 (548-byte)** file for the pinned forwarder. Older 544-byte files may fail before Nintendont can migrate them. Keep a backup and regenerate or explicitly convert them with a compatible tool; do not simply pad them or change the version number. Without a readable configuration, the forwarder can fail to start. The existing Moon global CFG writer has known incomplete/incorrect option mappings and is scheduled for correction in Phase 2.
+Use a correctly generated **CFG v10 (548-byte)** file for the pinned forwarder. Older 544-byte files may fail before Nintendont can migrate them. Keep a backup and regenerate or explicitly convert them with a compatible tool; do not simply pad them or change the version number. Without a readable configuration, the forwarder can fail to start. The SD Card Menu now uses the same corrected configuration editor and writer as the per-injection tab.
 
 See [forwarder provenance, source, license and rebuild instructions](integrations/nintendont/README.md) for the exact revisions, checksum and validation limits.
 
 ### Phase 2 — Embed a configuration in each injection
 
-Add a **Nintendont** tab for GameCube injections, with an optional configuration editor based on the existing SD Card Menu.
+The **Nintendont** tab provides an optional per-injection configuration editor, enabled only for GameCube injections.
 
-- Embedding will be disabled by default.
-- When enabled, Moon will generate and include `nincfg.bin` in the injection.
+- Embedding is disabled by default and unavailable when **Disable Autoboot** is selected.
+- When enabled, Moon generates CFG v10 at `files/nincfg.bin` before rebuilding the virtual ISO.
 - A game-specific configuration on SD will take precedence.
-- A shared, tested serializer will also correct the existing global configuration generator.
+- **Export config…** saves the current settings as `XXXX.bin`, using the selected GameCube disc's four-character ID. The save dialog starts in **Output Directory** when configured; copy the exported file to `SD:/nintendont/configs/` to use it as a per-game override.
+- Both screens use one shared editor, ViewModel, validator and serializer for the pinned 548-byte, big-endian format. Global generation does not force autoboot or a game path; the embedded destination applies its required boot fields. Replacing a global file requires confirmation and creates a `.bak` backup.
 
 ### Phase 3 — Manage configurations on SD
 
@@ -82,7 +83,10 @@ Local SD access will remain available without an FTP connection.
 
 The integration pins the forwarder revision and documents its build, configuration format and binary checksum. The initial reference is CFG v10; older files must not be assumed compatible.
 
-**Wii U test:** A *Luigi’s Mansion* (PAL, `GLMP01`) WUP built during Phase 2 booted with the same V10lator forwarder used by this branch. The test used rebuilt Wii U `meta.xml` metadata and an updated Nintendont loader on SD. The standalone Phase 1 build, global fallback and the non-autoboot path still need hardware testing.
+- **Phase 1.** A standalone Phase 1 injection reached gameplay on a Wii U with V10lator's forwarder after the older Nintendont configuration was replaced with a compatible CFG v10 file.
+- **Phase 2.** A GameCube WUP with an embedded CFG v10 launched after its Wii U menu metadata was regenerated and the Nintendont loader on SD was updated. A per-game configuration on SD took precedence over the embedded video settings.
+
+An isolated test of global configuration fallback, manual startup with **Disable Autoboot**, disc swapping and return to the Wii U menu still need hardware coverage.
 
 Rebuild and reinstall existing injections to use the new forwarder or regenerate their Wii U metadata.
 
