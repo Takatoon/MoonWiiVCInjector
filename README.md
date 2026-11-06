@@ -6,7 +6,7 @@ This fork aims to add per-game Nintendont configuration support to Moon WiiVC In
 
 The integration builds on **[V10lator's Nintendont autoboot forwarder](https://github.com/V10lator/nintendont-autoboot-forwarder)**, based on the original work by **[FIX94](https://github.com/FIX94/nintendont-autoboot-forwarder)**. Credit for the forwarder and its configuration loading behavior belongs to its authors.
 
-**Status:** Phase 1 forwarder integration and Phase 2 configuration editing, CFG v10 serialization, embedding and per-game export are implemented. PC checks pass; full injection builds and real Wii U validation remain pending. Phases 3 and 4 are planned.
+**Status:** Phases 1 and 2 are implemented. A Phase 2 test injection booted on a real Wii U using the Phase 1 forwarder. Phases 3 and 4 are planned.
 
 ### Phase 1 — Integrate V10lator's forwarder
 
@@ -83,7 +83,9 @@ Local SD access will remain available without an FTP connection.
 
 The integration pins the forwarder revision and documents its build, configuration format and binary checksum. The initial reference is CFG v10; older files must not be assumed compatible.
 
-Each phase will distinguish automated checks from tests performed on real Wii U hardware. Existing installed injections will require rebuilding to use the new forwarder.
+**Wii U test:** A *Luigi’s Mansion* (PAL, `GLMP01`) WUP with an embedded CFG v10 launched after its `meta.xml` was rebuilt to match TeconMoon's layout and the Nintendont loader on SD was updated. A per-game `GLMP.bin` on SD overrode the embedded video settings and restored TV output with Force (Deflicker), PAL60 and Force Progressive off. This test covers one title. Global fallback and the non-autoboot path still need hardware testing.
+
+Rebuild and reinstall existing injections to use the new forwarder or regenerate their Wii U metadata.
 
 Changes to Wii Retail, Wii Homebrew and vWii NAND injection behavior, and unrelated GamePad patches, are outside this work.
 

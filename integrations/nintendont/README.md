@@ -141,6 +141,8 @@ The following PC checks passed:
   against the dependency header: v10, 548 bytes and field offsets match.
 - Build output includes this notice, the license and corresponding source.
 
-These do **not** verify a complete ISO/WUP build or Wii U boot behavior. Tests
-on real hardware, including configuration priority, fallback, two-disc games and
-return to the Wii U menu, remain pending.
+On real Wii U hardware, a Phase 2 *Luigi’s Mansion* (PAL, `GLMP01`) WUP with
+an embedded CFG v10 booted with this forwarder after regenerating the Wii U
+menu metadata and updating the Nintendont loader on SD. A per-game `GLMP.bin`
+on SD took precedence over the embedded video settings. Global fallback,
+non-autoboot, two-disc games and return to the Wii U menu still need testing.
