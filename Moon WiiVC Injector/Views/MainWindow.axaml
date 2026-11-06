@@ -172,15 +172,7 @@
       <TabItem Header="Nintendont" IsEnabled="{Binding IsGCSelected}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" AllowAutoHide="False">
           <StackPanel Margin="10" Spacing="12">
-            <StackPanel Spacing="8">
-              <CheckBox Name="DisableNintendontAutoboot" Content="Disable Autoboot" IsChecked="{Binding DisableNintendontAutoboot}" ToolTip.Tip="Embedded config requires autoboot."/>
-              <CheckBox Name="EmbedNintendontConfig" Content="Embed custom config" IsChecked="{Binding EmbedNintendontConfig}" IsEnabled="{Binding !DisableNintendontAutoboot}" ToolTip.Tip="An SD game-specific config (XXXX.bin) takes precedence."/>
-            </StackPanel>
-            <Grid IsEnabled="{Binding !DisableNintendontAutoboot}">
-              <Grid IsEnabled="{Binding EmbedNintendontConfig}">
-                <views:NintendontConfigView DataContext="{Binding NintendontConfig}"/>
-              </Grid>
-            </Grid>
+            <views:NintendontConfigView DataContext="{Binding NintendontConfig}"/>
             <Border Background="Transparent" HorizontalAlignment="Right" ToolTip.Tip="{Binding NintendontExportTooltip}">
               <Button Content="Export config…" Command="{Binding ExportNintendontConfigCommand}"/>
             </Border>

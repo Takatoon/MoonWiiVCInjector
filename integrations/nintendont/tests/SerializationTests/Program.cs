@@ -24,12 +24,41 @@ Check(MainViewModel.GetNintendontConfigFileName("GMSE") == "GMSE.bin", "export f
 foreach (string id in new[] { "", "GMS", "GMSE01", "../x", "GMS/", "gmse", "GM\0E" })
     Check(MainViewModel.GetNintendontConfigFileName(id) is null, "invalid export ID rejected");
 
-var ui = new NintendontConfigViewModel();
+var modeDialogs = new TestDialogs();
+var ui = new NintendontConfigViewModel(modeDialogs, isInjectionEditor: true);
 byte[] defaults = NintendontConfigSerializer.SerializeForInjection(ui.ToConfig());
 Check(defaults.Length == 548 && Read(defaults, 0) == 0x01070CF6 && Read(defaults, 4) == 10, "v10 header and size");
 Check(Read(defaults, 8) == 0x88 && Read(defaults, 12) == 0 && Read(defaults, 16) == uint.MaxValue, "default flags, video, Auto language");
 Check(defaults[20] == 'd' && defaults[21] == 'i' && defaults[22..532].All(b => b == 0), "paths and alignment padding");
 Check(defaults[532..548].All(b => b == 0), "default Wii U fields");
+
+Check(!ui.IsAdvanced, "editor starts in Simple with defaults");
+ui.SimpleWidescreen = true;
+ui.ForceProgressive = true;
+Check(ui.ForceWidescreen && ui.WiiUWidescreen, "Simple widescreen sets both flags");
+await ui.SetAdvancedAsync(true);
+await ui.SetAdvancedAsync(false);
+Check(!ui.IsAdvanced && modeDialogs.LastTitle is null, "Simple options alone do not require confirmation");
+await ui.SetAdvancedAsync(true);
+ui.ForceWidescreen = false;
+ui.VideoTypeIndex = 3;
+ui.VideoModeIndex = 2;
+ui.EmbedCustomConfig = true;
+ui.DisableAutoboot = true;
+Check(!ui.EmbedCustomConfig, "manual startup clears the embedding selection");
+modeDialogs.ResetAdvanced = MessageBoxResult.No;
+await ui.SetAdvancedAsync(false);
+Check(ui.IsAdvanced && !ui.ForceWidescreen && ui.WiiUWidescreen && ui.DisableAutoboot && ui.VideoTypeIndex == 3,
+    "declining the switch preserves advanced settings");
+modeDialogs.ResetAdvanced = MessageBoxResult.Yes;
+await ui.SetAdvancedAsync(false);
+Check(!ui.IsAdvanced && ui.SimpleWidescreen && ui.ForceWidescreen && ui.WiiUWidescreen && ui.ForceProgressive &&
+    !ui.DisableAutoboot && !ui.EmbedCustomConfig && ui.VideoModeIndex == 0 && ui.VideoTypeIndex == 0,
+    "switching to Simple joins either widescreen flag, preserves progressive, and resets advanced settings");
+ui.SimpleWidescreen = false;
+ui.ForceProgressive = false;
+Check(NintendontConfigSerializer.SerializeForInjection(ui.ToConfig()).SequenceEqual(defaults),
+    "Simple defaults serialize identically after leaving Advanced");
 
 // Every editable flag independently, to catch swapped or omitted options.
 foreach (var (property, bit) in new (string, int)[] {
@@ -38,7 +67,7 @@ foreach (var (property, bit) in new (string, int)[] {
     ("CcRumble", 17), ("UnlockReadSpeed", 8), ("SkipIpl", 18), ("BbaEmulation", 19),
     ("TriArcadeMode", 16), ("OsReport", 9), ("Log", 12) })
 {
-    var single = new NintendontConfigViewModel { MemcardEmulation = false };
+    var single = new NintendontConfigViewModel(modeDialogs) { MemcardEmulation = false };
     if (property == "MultiMemcard") single.MemcardEmulation = true;
     typeof(NintendontConfigViewModel).GetProperty(property)!.SetValue(single, true);
     uint expected = (1u << bit) | (property == "MultiMemcard" ? 8u : 0u);
@@ -50,7 +79,7 @@ uint[] typeBits = [4, 8, 1, 2]; // UI order NTSC, MPAL, PAL50, PAL60.
 for (int mode = 0; mode < 4; mode++)
     for (int type = 0; type < 4; type++)
     {
-        ui = new() { VideoModeIndex = mode, VideoTypeIndex = type };
+        ui = new(modeDialogs) { VideoModeIndex = mode, VideoTypeIndex = type };
         Check((uint)ui.ToConfig().VideoMode == (modeBits[mode] | (mode is 1 or 2 ? typeBits[type] : 0)), $"video mode/type {mode}/{type}");
     }
 for (int language = 0; language < 7; language++)
@@ -69,7 +98,7 @@ for (int blocks = 0; blocks < 6; blocks++)
     Check(ui.ToConfig().MemcardBlocks == blocks, $"memory blocks {blocks}");
 }
 
-ui = new() { MultiMemcard = true, PatchPal50 = true };
+ui = new(modeDialogs) { MultiMemcard = true, PatchPal50 = true };
 Check(ui.ToConfig().Flags.HasFlag(NintendontFlags.MultiMemcard), "multi enabled with emulation");
 ui.MemcardEmulation = false;
 Check(!ui.ToConfig().Flags.HasFlag(NintendontFlags.MultiMemcard), "inactive memory dependency omitted");
@@ -81,7 +110,7 @@ Check(ui.ToConfig().VideoScale == 0, "auto width ignores retained manual width")
 ui.AutoVideoWidth = false;
 Check(ui.ToConfig().VideoScale == 101, "manual width uses 600 offset");
 
-ui = new() {
+ui = new(modeDialogs) {
     MultiMemcard = true, Cheats = true, ForceWidescreen = true, WiiUWidescreen = true,
     ForceProgressive = true, CcRumble = true, UnlockReadSpeed = true, SkipIpl = true,
     BbaEmulation = true, TriArcadeMode = true, OsReport = true, Log = true,
@@ -120,12 +149,12 @@ byte[] corrupt = (byte[])combined.Clone(); corrupt[0] = 0;
 Reject(() => NintendontConfigSerializer.Deserialize(corrupt), "invalid magic");
 corrupt = (byte[])combined.Clone(); Array.Fill(corrupt, (byte)'a', 20, 255);
 Reject(() => NintendontConfigSerializer.Deserialize(corrupt), "unterminated path");
-Reject(() => new NintendontConfigViewModel { VideoModeIndex = -1 }.ToConfig(), "no video selection");
-Reject(() => new NintendontConfigViewModel { AutoVideoWidth = false, VideoWidth = 640.5m }.ToConfig(), "fractional width");
-Reject(() => new NintendontConfigViewModel { VideoOffset = -0.5m }.ToConfig(), "fractional offset");
+Reject(() => new NintendontConfigViewModel(modeDialogs) { VideoModeIndex = -1 }.ToConfig(), "no video selection");
+Reject(() => new NintendontConfigViewModel(modeDialogs) { AutoVideoWidth = false, VideoWidth = 640.5m }.ToConfig(), "fractional width");
+Reject(() => new NintendontConfigViewModel(modeDialogs) { VideoOffset = -0.5m }.ToConfig(), "fractional offset");
 
 var notified = new HashSet<string?>();
-var reactive = new NintendontConfigViewModel { PatchPal50 = true, VideoTypeIndex = 0 };
+var reactive = new NintendontConfigViewModel(modeDialogs) { PatchPal50 = true, VideoTypeIndex = 0 };
 reactive.PropertyChanged += (_, e) => notified.Add(e.PropertyName);
 reactive.VideoModeIndex = 2;
 Check(reactive.CanSelectVideoType && reactive.CanPatchPal50 && notified.Contains("CanSelectVideoType") && notified.Contains("CanPatchPal50"), "mode dependencies notify UI");
@@ -151,7 +180,7 @@ for (int mode = 0; mode < 4; mode++)
     for (int type = 0; type < 4; type++)
         foreach (bool progressive in new[] { false, true })
         {
-            var patch = new NintendontConfigViewModel {
+            var patch = new NintendontConfigViewModel(modeDialogs) {
                 VideoModeIndex = mode, VideoTypeIndex = type,
                 ForceProgressive = progressive, PatchPal50 = true,
             };
@@ -236,12 +265,17 @@ internal sealed class TestDialogs : IDialogService
 {
     public string? Folder { get; set; }
     public MessageBoxResult Overwrite { get; set; } = MessageBoxResult.Yes;
+    public MessageBoxResult ResetAdvanced { get; set; } = MessageBoxResult.Yes;
     public string? LastTitle { get; private set; }
     public Task<MessageBoxResult> ShowMessageAsync(string message, string title, MessageBoxButtons buttons = MessageBoxButtons.Ok)
     {
         LastTitle = title;
-        return Task.FromResult(title == "Replace global configuration" ? Overwrite :
-            buttons == MessageBoxButtons.YesNo ? MessageBoxResult.Yes : MessageBoxResult.Ok);
+        return Task.FromResult(title switch
+        {
+            "Replace global configuration" => Overwrite,
+            "Advanced configuration" => ResetAdvanced,
+            _ => buttons == MessageBoxButtons.YesNo ? MessageBoxResult.Yes : MessageBoxResult.Ok,
+        });
     }
     public Task<string?> OpenFolderDialogAsync(string title) => Task.FromResult(Folder);
     public Task<string?> SaveFileDialogAsync(string title, string fileName, string? initialDirectory = null) => throw new NotSupportedException();

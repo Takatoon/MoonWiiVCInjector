@@ -293,25 +293,14 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
         set => SetProperty(ref field, value);
     }
 
-    public bool DisableNintendontAutoboot
-    {
-        get;
-        set { if (SetProperty(ref field, value)) NotifyNintendontExportChanged(); }
-    }
+    public NintendontConfigViewModel NintendontConfig { get; }
 
-    public bool EmbedNintendontConfig
-    {
-        get;
-        set { if (SetProperty(ref field, value)) NotifyNintendontExportChanged(); }
-    }
-
-    public NintendontConfigViewModel NintendontConfig { get; } = new();
-
+    private const string NintendontSdConfigDirectory = "SD:/nintendont/configs";
     private string _nintendontGameId = string.Empty;
     public bool CanExportNintendontConfig => _systemType == "gcn" && !IsBuilding &&
-        EmbedNintendontConfig && !DisableNintendontAutoboot && GetNintendontConfigFileName(_nintendontGameId) is not null;
+        GetNintendontConfigFileName(_nintendontGameId) is not null;
     public string NintendontExportTooltip => GetNintendontConfigFileName(_nintendontGameId) is { } name
-        ? $"Save a per-game config for SD:/nintendont/configs/{name}."
+        ? $"Save a per-game config for {NintendontSdConfigDirectory}/{name}."
         : "Select a GameCube disc image to export its per-game configuration.";
 
     internal static string? GetNintendontConfigFileName(string gameId) =>
@@ -332,8 +321,12 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
         try
         {
             byte[] bytes = NintendontConfigSerializer.SerializeForInjection(NintendontConfig.ToConfig());
-            string? path = await _dialogService.SaveFileDialogAsync("Export Nintendont configuration",
-                GetNintendontConfigFileName(_nintendontGameId)!, Settings.Default.OutputPathFixed);
+            const string dialogTitle = "Export Nintendont configuration";
+            string fileName = GetNintendontConfigFileName(_nintendontGameId)!;
+            await _dialogService.ShowMessageAsync(
+                $"Copy the exported file to this location on your SD card.\n\n{NintendontSdConfigDirectory}/{fileName}\n\nThe SD configuration takes priority over the configuration embedded in the injection.",
+                dialogTitle);
+            string? path = await _dialogService.SaveFileDialogAsync(dialogTitle, fileName, Settings.Default.OutputPathFixed);
             if (string.IsNullOrEmpty(path)) return;
 
             string directory = Path.GetDirectoryName(Path.GetFullPath(path))!;
@@ -602,6 +595,7 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
     public MainViewModel(IDialogService dialogService)
     {
         _dialogService = dialogService;
+        NintendontConfig = new(dialogService, isInjectionEditor: true);
         AppLogger.SetListener(AppendLogMessage);
         AppLogger.Info("Moon WiiVC Injector initialized.");
         _setupTask = SetupEnvironmentAsync();
@@ -1644,7 +1638,8 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     public async Task BuildAsync()
     {
-        bool embedNintendontConfig = _systemType == "gcn" && !DisableNintendontAutoboot && EmbedNintendontConfig;
+        bool disableNintendontAutoboot = _systemType == "gcn" && NintendontConfig.DisableAutoboot;
+        bool embedNintendontConfig = _systemType == "gcn" && !disableNintendontAutoboot && NintendontConfig.EmbedCustomConfig;
         NintendontConfig? nintendontConfig = null;
         if (embedNintendontConfig)
         {
@@ -1765,7 +1760,7 @@ internal sealed partial class MainViewModel : ViewModelBase, IDisposable
             Wiimmfi = Wiimmfi,
             WiiVMC = WiiVMC,
             DisableTrimming = DisableTrimming,
-            DisableNintendontAutoboot = DisableNintendontAutoboot,
+            DisableNintendontAutoboot = disableNintendontAutoboot,
             EmbedNintendontConfig = embedNintendontConfig,
             NintendontConfig = nintendontConfig,
             C2WPatch = C2WPatchFlag,

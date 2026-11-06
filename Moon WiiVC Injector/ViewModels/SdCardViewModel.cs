@@ -40,7 +40,7 @@ internal sealed partial class SdCardViewModel : ViewModelBase
         set => SetProperty(ref field, value);
     } = -1;
 
-    public NintendontConfigViewModel NintendontConfig { get; } = new();
+    public NintendontConfigViewModel NintendontConfig { get; }
 
     public string ActionStatus
     {
@@ -54,6 +54,7 @@ internal sealed partial class SdCardViewModel : ViewModelBase
     public SdCardViewModel(IDialogService dialogService)
     {
         _dialogService = dialogService;
+        NintendontConfig = new(dialogService);
         ReloadDrives();
     }
 

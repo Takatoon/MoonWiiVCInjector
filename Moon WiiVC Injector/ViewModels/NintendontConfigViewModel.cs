@@ -1,9 +1,42 @@
+using System.Threading.Tasks;
 using Moon_WiiVC_Injector.Core.Nintendont;
+using Moon_WiiVC_Injector.Services;
 
 namespace Moon_WiiVC_Injector.ViewModels;
 
-internal sealed class NintendontConfigViewModel : ViewModelBase
+internal sealed class NintendontConfigViewModel(IDialogService dialogService, bool isInjectionEditor = false) : ViewModelBase
 {
+    private const decimal DefaultVideoWidth = 640;
+    public bool IsAdvanced { get; private set => SetProperty(ref field, value); }
+    public bool IsInjectionEditor => isInjectionEditor;
+    public bool EmbedCustomConfig { get; set => SetProperty(ref field, value); }
+
+    public bool DisableAutoboot
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value) && value)
+                EmbedCustomConfig = false;
+        }
+    }
+
+    public bool SimpleWidescreen
+    {
+        get => ForceWidescreen || WiiUWidescreen;
+        set
+        {
+            ForceWidescreen = value;
+            WiiUWidescreen = value;
+        }
+    }
+
+    private bool HasAdvancedChanges => DisableAutoboot || ForceWidescreen != WiiUWidescreen ||
+        !MemcardEmulation || MemcardBlocksIndex != 0 || MultiMemcard || VideoModeIndex != 0 ||
+        VideoTypeIndex != 0 || !AutoVideoWidth || VideoWidth != DefaultVideoWidth || VideoOffset != 0 ||
+        PatchPal50 || LanguageIndex != 0 || GamepadSlotIndex != 0 || CcRumble || UnlockReadSpeed ||
+        SkipIpl || Cheats || BbaEmulation || TriArcadeMode || OsReport || Log;
+
     public bool MemcardEmulation { get; set => SetProperty(ref field, value); } = true;
     public int MemcardBlocksIndex { get; set => SetProperty(ref field, value); }
     public bool MultiMemcard { get; set => SetProperty(ref field, value); }
@@ -30,10 +63,26 @@ internal sealed class NintendontConfigViewModel : ViewModelBase
         }
     }
     public bool AutoVideoWidth { get; set => SetProperty(ref field, value); } = true;
-    public decimal VideoWidth { get; set => SetProperty(ref field, value); } = 640;
+    public decimal VideoWidth { get; set => SetProperty(ref field, value); } = DefaultVideoWidth;
     public decimal VideoOffset { get; set => SetProperty(ref field, value); }
-    public bool ForceWidescreen { get; set => SetProperty(ref field, value); }
-    public bool WiiUWidescreen { get; set => SetProperty(ref field, value); }
+    public bool ForceWidescreen
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+                OnPropertyChanged(nameof(SimpleWidescreen));
+        }
+    }
+    public bool WiiUWidescreen
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+                OnPropertyChanged(nameof(SimpleWidescreen));
+        }
+    }
     public bool ForceProgressive
     {
         get;
@@ -57,6 +106,48 @@ internal sealed class NintendontConfigViewModel : ViewModelBase
     public bool TriArcadeMode { get; set => SetProperty(ref field, value); }
     public bool OsReport { get; set => SetProperty(ref field, value); }
     public bool Log { get; set => SetProperty(ref field, value); }
+
+    public async Task SetAdvancedAsync(bool enabled)
+    {
+        if (enabled == IsAdvanced) return;
+        if (!enabled)
+        {
+            if (HasAdvancedChanges && await dialogService.ShowMessageAsync(
+                "Switch to Simple and reset advanced settings?",
+                "Advanced configuration", MessageBoxButtons.YesNo) != MessageBoxResult.Yes)
+                return;
+
+            ResetAdvancedSettings();
+        }
+
+        IsAdvanced = enabled;
+    }
+
+    private void ResetAdvancedSettings()
+    {
+        bool widescreen = SimpleWidescreen;
+        DisableAutoboot = false;
+        MemcardEmulation = true;
+        MemcardBlocksIndex = 0;
+        MultiMemcard = false;
+        VideoModeIndex = 0;
+        VideoTypeIndex = 0;
+        AutoVideoWidth = true;
+        VideoWidth = DefaultVideoWidth;
+        VideoOffset = 0;
+        SimpleWidescreen = widescreen;
+        PatchPal50 = false;
+        LanguageIndex = 0;
+        GamepadSlotIndex = 0;
+        CcRumble = false;
+        UnlockReadSpeed = false;
+        SkipIpl = false;
+        Cheats = false;
+        BbaEmulation = false;
+        TriArcadeMode = false;
+        OsReport = false;
+        Log = false;
+    }
 
     public NintendontConfig ToConfig()
     {

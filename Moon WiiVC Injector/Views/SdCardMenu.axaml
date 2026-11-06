@@ -17,7 +17,7 @@
       <TextBlock Text="{Binding ActionStatus}" TextAlignment="Center"/>
       <Button Content="Download Latest Nintendont from GitHub" Command="{Binding UpdateNintendontCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
       <views:NintendontConfigView DataContext="{Binding NintendontConfig}"/>
-      <Button Content="Generate global config (nincfg.bin)" Command="{Binding GenerateConfigCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+      <Button Content="Generate global config (nincfg.bin)" Command="{Binding GenerateConfigCommand}" HorizontalAlignment="Right"/>
     </StackPanel>
   </ScrollViewer>
 </Window>
