@@ -55,7 +55,7 @@
         <Border Grid.Row="0" Margin="0,0,0,12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
           <StackPanel Spacing="8">
             <TextBlock Text="Memory Card" FontWeight="SemiBold"/>
-            <CheckBox Content="Memcard Emulation" IsChecked="{Binding MemcardEmulation}" ToolTip.Tip="Save game progress to virtual GameCube memory card files. Required for saving on Wii U, which has no physical GameCube memory card slots."/>
+            <CheckBox Content="Memcard Emulation" IsChecked="{Binding MemcardEmulation}" ToolTip.Tip="Use a virtual GameCube memory card. Triforce arcade card saves are handled separately and are unaffected by this setting."/>
             <StackPanel Spacing="8" IsEnabled="{Binding MemcardEmulation}">
               <Grid Background="Transparent" ToolTip.Tip="Capacity of the virtual memory card in save blocks. Larger than 251 may cause compatibility issues. Does not resize existing cards." ColumnDefinitions="*,170">
                 <TextBlock Text="Memcard Blocks" VerticalAlignment="Center"/>
