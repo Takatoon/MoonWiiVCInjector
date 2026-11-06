@@ -225,7 +225,7 @@ internal static class TgaReader
         writer.Write((ushort)bmp.Width);
         writer.Write((ushort)bmp.Height);
         writer.Write((byte)bpp);
-        writer.Write((byte)0); // Descriptor (0 = bottom-to-top layout)
+        writer.Write((byte)(bpp == 32 ? 8 : 0)); // Bottom-to-top layout with alpha in 32-bit images.
 
         int bytesPerPixel = bpp / 8;
         byte[] pixelData = new byte[bmp.Width * bmp.Height * bytesPerPixel];
@@ -315,6 +315,11 @@ internal static class TgaReader
         }
 
         writer.Write(pixelData);
+
+        // Wii U menu textures use a TGA 2.0 footer with no extension or developer area.
+        writer.Write(0u);
+        writer.Write(0u);
+        writer.Write("TRUEVISION-XFILE.\0"u8);
     }
 
     /// <summary>
